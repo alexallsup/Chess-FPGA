@@ -1,0 +1,24 @@
+Piece codes:
+	-Each piece shall be represented by four bits
+	-The MSB (3) shall denote the color:
+		White 	0
+		Black	1
+	-The LSBs (2:0) shall denote the type:
+		No piece 	000	(used to show empty space)
+		Pawn		001
+		Knight		010
+		Bishop		011
+		Rook		100
+		Queen		101
+		King		110
+
+Board addresses:
+	-A 6-bit address defines the locations on the board
+	-The MSB (5:3) will denote the row (rank). 
+		-The top row (closest to black) will be 000
+		-The bottom row (closest to white) will be 111
+	-The LSB (2:0) will denote the column (file).
+		-The leftmost column (from white's perspective) will be 000
+		-The rightmost column will be 111
+	-Trick to determine color: if bit 3 XOR bit 0 = 0, the square is WHITE
+							   if bit 3 XOR bit 0 = 1, the square is BLACK
