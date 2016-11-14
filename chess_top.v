@@ -30,6 +30,25 @@ input		BtnL, BtnU, BtnD, BtnR, BtnC;
 
 /* OUTPUTS */
 output 	MemOE, MemWR, RamCS, FlashCS, QuadSpiFlashCS; // just to disable them all
+
+/* Init debouncer */
+wire BtnC_pulse, BtnU_pulse, BtnR_pulse, BtnL_pulse, BtnD_pulse;
+input_debounce L_debounce(
+	.CLK(ClkPort /*TODO assign appropriate debounce clk*/), .RESET(Reset),
+	.Btn(BtnL), .Btn_pulse(BtnL_pulse));
+input_debounce R_debounce(
+	.CLK(ClkPort /*TODO assign appropriate debounce clk*/), .RESET(Reset),
+	.Btn(BtnR), .Btn_pulse(BtnR_pulse));
+input_debounce U_debounce(
+	.CLK(ClkPort /*TODO assign appropriate debounce clk*/), .RESET(Reset),
+	.Btn(BtnU), .Btn_pulse(BtnU_pulse));
+input_debounce D_debounce(
+	.CLK(ClkPort /*TODO assign appropriate debounce clk*/), .RESET(Reset),
+	.Btn(BtnD), .Btn_pulse(BtnD_pulse));
+input_debounce C_debounce(
+	.CLK(ClkPort /*TODO assign appropriate debounce clk*/), .RESET(Reset),
+	.Btn(BtnC), .Btn_pulse(BtnC_pulse));
+
  
 /* Piece Definitions */
 localparam PIECE_NONE 	= 3'b000;
