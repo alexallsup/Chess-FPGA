@@ -50,7 +50,7 @@ end
 wire game_logic_clk, vga_clk, debounce_clk;
 assign game_logic_clk = DIV_CLK[11]; // 24.4 kHz 
 assign vga_clk = DIV_CLK[1]; // 25MHz for pixel freq
-assign debounce_clk = DIV_CLK[10]; // TODO pick a frequency for this once debounce module is done
+assign debounce_clk = DIV_CLK[11]; // 24.4 kHz; needs to match game_logic for the single clock pulses
 
 /* Init debouncer */
 wire BtnC_pulse, BtnU_pulse, BtnR_pulse, BtnL_pulse, BtnD_pulse;
