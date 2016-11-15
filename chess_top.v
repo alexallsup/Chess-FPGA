@@ -49,6 +49,30 @@ input_debounce C_debounce(
 	.CLK(ClkPort /*TODO assign appropriate debounce clk*/), .RESET(Reset),
 	.Btn(BtnC), .Btn_pulse(BtnC_pulse));
 
+/* Init game logic module and its output wires*/
+wire[5:0] board_change_addr;
+wire[3:0] board_change_piece;
+wire board_change_enable;
+wire[5:0] cursor_addr;
+wire[5:0] selected_piece_addr;
+wire hilite_selected_square;
+
+game_logic logic_module(
+	.CLK(ClkPort), // TODO assign appropriate clock
+	.RESET(Reset),
+	.board_input(board),
+
+	.board_out_addr(board_change_addr),
+	.board_out_piece(board_change_piece),
+	.board_change_enable(board_change_enable),
+	.cursor_addr(cursor_addr),
+	.selected_piece_addr(selected_piece_addr),
+	.hilite_selected_square(hilite_selected_square),
+
+	.BtnU(BtnU_pulse), .BtnL(BtnL_pulse), .BtnC(BtnC_pulse),
+	.BtnR(BtnR_pulse), .BtnD(BtnD_pulse)
+	);
+
  
 /* Piece Definitions */
 localparam PIECE_NONE 	= 3'b000;
