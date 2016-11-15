@@ -165,5 +165,11 @@ begin: INITIALIZE_BOARD
 	
 end
 
+/* Setup connections from game logic to board register */
+always @(posedge ClkPort) // TODO check appropriate clock
+begin
+	if (board_change_enable) board[board_change_addr] <= board_change_piece;
+end
+
 
 endmodule
