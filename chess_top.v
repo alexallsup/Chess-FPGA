@@ -19,37 +19,58 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 module chess_top( MemOE, MemWR, RamCS, FlashCS, QuadSpiFlashCS, // Disable the three memory chips
-      ClkPort, Reset,
-		BtnL, BtnU, BtnD, BtnR, BtnC       
+      ClkPort, // ClkPort will be the board's 100MHz clk
+      Reset,
+		BtnL, BtnU, BtnD, BtnR, BtnC,
+		Sw0 // For reset    
     );
 	 
 /*  INPUTS */
 // Clock & Reset I/O
-input		ClkPort, Reset;	
+input		Sw0;	
 input		BtnL, BtnU, BtnD, BtnR, BtnC;	
+wire Reset;
+assign Reset = Sw0;
 
 /* OUTPUTS */
 output 	MemOE, MemWR, RamCS, FlashCS, QuadSpiFlashCS; // just to disable them all
 
+/* Clocking */
+input ClkPort;
+reg[26:0] DIV_CLK;
+wire full_clock;
+BUFGP CLK_BUF(full_clock, ClkPort);
+
+always @(posedge full_clock, posedge Reset)
+begin
+	if (Reset) DIV_CLK <= 0;
+	else DIV_CLK <= DIV_CLK + 1'b1;
+end
+
+wire game_logic_clk, vga_clk, debounce_clk;
+assign game_logic_clk = DIV_CLK[11]; // 24.4 kHz 
+assign vga_clk = DIV_CLK[1]; // 25MHz for pixel freq
+assign debounce_clk = DIV_CLK[10]; // TODO pick a frequency for this once debounce module is done
+
 /* Init debouncer */
 wire BtnC_pulse, BtnU_pulse, BtnR_pulse, BtnL_pulse, BtnD_pulse;
 input_debounce L_debounce(
-	.CLK(ClkPort /*TODO assign appropriate debounce clk*/), .RESET(Reset),
+	.CLK(debounce_clk), .RESET(Reset),
 	.Btn(BtnL), .Btn_pulse(BtnL_pulse));
 input_debounce R_debounce(
-	.CLK(ClkPort /*TODO assign appropriate debounce clk*/), .RESET(Reset),
+	.CLK(debounce_clk), .RESET(Reset),
 	.Btn(BtnR), .Btn_pulse(BtnR_pulse));
 input_debounce U_debounce(
-	.CLK(ClkPort /*TODO assign appropriate debounce clk*/), .RESET(Reset),
+	.CLK(debounce_clk), .RESET(Reset),
 	.Btn(BtnU), .Btn_pulse(BtnU_pulse));
 input_debounce D_debounce(
-	.CLK(ClkPort /*TODO assign appropriate debounce clk*/), .RESET(Reset),
+	.CLK(debounce_clk), .RESET(Reset),
 	.Btn(BtnD), .Btn_pulse(BtnD_pulse));
 input_debounce C_debounce(
-	.CLK(ClkPort /*TODO assign appropriate debounce clk*/), .RESET(Reset),
+	.CLK(debounce_clk), .RESET(Reset),
 	.Btn(BtnC), .Btn_pulse(BtnC_pulse));
 
-/* Init game logic module and its output wires*/
+/* Init game logic module and its output wires */
 wire[5:0] board_change_addr;
 wire[3:0] board_change_piece;
 wire board_change_enable;
@@ -58,7 +79,7 @@ wire[5:0] selected_piece_addr;
 wire hilite_selected_square;
 
 game_logic logic_module(
-	.CLK(ClkPort), // TODO assign appropriate clock
+	.CLK(game_logic_clk), 
 	.RESET(Reset),
 	.board_input(board),
 
@@ -166,7 +187,7 @@ begin: INITIALIZE_BOARD
 end
 
 /* Setup connections from game logic to board register */
-always @(posedge ClkPort) // TODO check appropriate clock
+always @(posedge game_logic_clk) 
 begin
 	if (board_change_enable) board[board_change_addr] <= board_change_piece;
 end
