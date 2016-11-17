@@ -22,7 +22,10 @@ module chess_top( MemOE, MemWR, RamCS, FlashCS, QuadSpiFlashCS, // Disable the t
       ClkPort, // ClkPort will be the board's 100MHz clk
 		BtnL, BtnU, BtnD, BtnR, BtnC,
 		Sw0, // For reset   
-		vga_hsync, vga_vsync, vga_r, vga_g, vga_b 
+		vga_hsync, vga_vsync, 
+		vga_r0, vga_r1, vga_r2,
+		vga_g0, vga_g1, vga_g2,
+		vga_b0, vga_b1 
     );
 	 
 /*  INPUTS */
@@ -34,7 +37,16 @@ assign Reset = Sw0;
 
 /* OUTPUTS */
 output 	MemOE, MemWR, RamCS, FlashCS, QuadSpiFlashCS; // just to disable them all
-output wire vga_hsync, vga_vsync, vga_r, vga_g, vga_b;
+output wire vga_hsync, vga_vsync; 
+output wire vga_r0, vga_r1, vga_r2;
+output wire vga_g0, vga_g1, vga_g2;
+output wire vga_b0, vga_b1;
+
+wire vga_r[2:0], vga_g[2:0], vga_b[1:0];
+assign {vga_r0, vga_r1, vga_r2} = vga_r;
+assign {vga_g0, vga_g1, vga_g2} = vga_g;
+assign {vga_b0, vga_b1} = vga_b;
+
 
 /* Clocking */
 input ClkPort;
