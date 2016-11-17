@@ -22,7 +22,8 @@ module chess_top( MemOE, MemWR, RamCS, FlashCS, QuadSpiFlashCS, // Disable the t
       ClkPort, // ClkPort will be the board's 100MHz clk
       Reset,
 		BtnL, BtnU, BtnD, BtnR, BtnC,
-		Sw0 // For reset    
+		Sw0, // For reset   
+		vga_hsync, vga_vsync, vga_r, vga_g, vga_b 
     );
 	 
 /*  INPUTS */
@@ -34,6 +35,7 @@ assign Reset = Sw0;
 
 /* OUTPUTS */
 output 	MemOE, MemWR, RamCS, FlashCS, QuadSpiFlashCS; // just to disable them all
+output wire vga_hsync, vga_vsync, vga_r, vga_g, vga_b;
 
 /* Clocking */
 input ClkPort;
@@ -94,6 +96,19 @@ game_logic logic_module(
 	.BtnR(BtnR_pulse), .BtnD(BtnD_pulse)
 	);
 
+/* Init VGA interface */
+vga_interface display_interface(
+	.CLK(vga_clk), // 25 MHz
+	.RESET(Reset),
+	.HSYNC(vga_hsync), // direct outputs to VGA monitor
+	.VSYNC(vga_vsync),
+	.R(vga_r),
+	.G(vga_g),
+	.B(vga_b),
+	.BOARD(board), // the 64x4 array for the board contents
+	.CURSOR_ADDR(cursor_addr), // 6 bit address showing what square to hilite
+	.SELECT_ADDR(selected_piece_addr), // 6b address showing the address of which piece is selected
+	.SELECT_EN(hilite_selected_square)); // binary flag to show a selected piece
  
 /* Piece Definitions */
 localparam PIECE_NONE 	= 3'b000;
