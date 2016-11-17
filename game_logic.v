@@ -19,24 +19,33 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 module game_logic(
-    input CLK, RESET,
-    input [255:0] board_input,
-    output [5:0] board_out_addr,
-    output [3:0] board_out_piece,
-    output board_change_enable, // allow the board to update its value on next clock
-    input BtnL, // All button inputs shall have been debounced & made a single clk pulse outside this module
-    input BtnU,
-    input BtnR,
-    input BtnD,
-    input BtnC,
-    output [5:0] cursor_addr,
-    output [5:0] selected_piece_addr,
-    output hilite_selected_square
+    CLK, RESET,
+    board_input,
+    board_out_addr,
+    board_out_piece,
+    board_change_enable, // allow the board to update its value on next clock
+    BtnL, // All button inputs shall have been debounced & made a single clk pulse outside this module
+    BtnU,
+    BtnR,
+    BtnD,
+    BtnC,
+    cursor_addr,
+    selected_piece_addr,
+    hilite_selected_square
     );
 
 /* Inputs */
-input [255:0] board_input;
-input BtnL, BtnU, BtnR, BtnD, BtnC;
+input wire CLK, RESET;
+input wire BtnL, BtnU, BtnR, BtnD, BtnC;
+
+input wire [255:0] board_input;
+
+wire[3:0] board[63:0];
+genvar i;
+generate for (i=0; i<64; i=i+1) begin: BOARD
+	assign board[i] = board_input[i*4+3 : i*4];
+end
+endgenerate
 
 /* Outputs */ 
 // outputs for communicating with the board register in top
@@ -86,7 +95,7 @@ reg[1:0] castle_state;
 always @ (posedge CLK, posedge RESET) begin
     if (RESET) begin
         // initialization code here
-        state <= INIT;
+        state <= INITIAL;
         castle_state <= 2'bXX;
         player_to_move <= COLOR_WHITE;
         white_can_castle_short <= 1;
@@ -192,6 +201,7 @@ always @ (posedge CLK, posedge RESET) begin
                 // TODO implement castling.
                 // this will be a sub-state machine to handle the four different states
             end
+			endcase
     end
 end
 

@@ -4,9 +4,9 @@
 // Implementation based off the design in the debouncing lab
 // State diagram found on page 3 of the lab manual
 
-module btn_debouncer(
-	input CLK, input RESET,
-	input Btn, output Btn_pulse);
+module input_debounce(
+	CLK, RESET,
+   Btn, Btn_pulse);
 
 // inputs 
 input CLK; // should be at about 24.4 kHz
@@ -73,6 +73,7 @@ begin
 
 				I <= I + 1;
 			end
+		endcase
 	end
 end
 
