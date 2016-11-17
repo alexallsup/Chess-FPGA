@@ -20,7 +20,7 @@ localparam INIT = 3'b000, WQ = 3'b001, SCEN_St = 3'b010, CCR = 3'b011, WFCR = 3'
 reg[2:0] state;
 
 localparam max_i = 6100; // should yield a wait time of approx 0.25s
-reg I;
+reg[13:0] I;
 
 always @(posedge CLK, posedge RESET)
 begin

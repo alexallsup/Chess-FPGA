@@ -42,10 +42,13 @@ output wire vga_r0, vga_r1, vga_r2;
 output wire vga_g0, vga_g1, vga_g2;
 output wire vga_b0, vga_b1;
 
-wire vga_r[2:0], vga_g[2:0], vga_b[1:0];
-assign {vga_r0, vga_r1, vga_r2} = vga_r;
-assign {vga_g0, vga_g1, vga_g2} = vga_g;
-assign {vga_b0, vga_b1} = vga_b;
+// connect the vga color buses to the top design's outputs
+wire[2:0] vga_r;
+wire[2:0] vga_g;
+wire[1:0] vga_b;
+assign vga_r0 = vga_r[2]; assign vga_r1 = vga_r[1]; assign vga_r2 = vga_r[0];
+assign vga_g0 = vga_g[2]; assign vga_g1 = vga_g[1]; assign vga_g2 = vga_b[0];
+assign vga_b0 = vga_b[1]; assign vga_b1 = vga_b[0];
 
 
 /* Clocking */
@@ -214,7 +217,7 @@ begin
 end
 
 /* Init VGA interface */
-vga_interface display_interface(
+display_interface display_interface(
 	.CLK(vga_clk), // 25 MHz
 	.RESET(Reset),
 	.HSYNC(vga_hsync), // direct outputs to VGA monitor
