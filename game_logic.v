@@ -60,8 +60,8 @@ output reg hilite_selected_square;
 
 // wires for the contents of the board input
 wire[3:0] cursor_contents, selected_contents;
-assign cursor_contents = board_input[cursor_addr]; // contents of the cursor square
-assign selected_contents = board_input[selected_piece_addr]; // contents of the selected square
+assign cursor_contents = board[cursor_addr]; // contents of the cursor square
+assign selected_contents = board[selected_piece_addr]; // contents of the selected square
 
 /* Piece Definitions */
 localparam PIECE_NONE   = 3'b000;
@@ -126,14 +126,14 @@ always @ (posedge CLK, posedge RESET) begin
                 // State Transitions
                 if (BtnC 
                     && cursor_contents[3] == player_to_move
-                    && cursor_contents[2:0] != 3'b000) // TODO verify addressing
+                    && cursor_contents[2:0] != PIECE_NONE) // TODO verify addressing
                         state <= PIECE_MOVE;
                 // else we remain in this state
 
                 // RTL operations
                 if (BtnC 
                     && cursor_contents[3] == player_to_move
-                    && cursor_contents[2:0] != 3'b000) // TODO verify addressing
+                    && cursor_contents[2:0] != PIECE_NONE) // TODO verify addressing
                 begin
                     selected_piece_addr <= cursor_addr;
                     hilite_selected_square <= 1;
@@ -145,7 +145,7 @@ always @ (posedge CLK, posedge RESET) begin
                 // State Transitions
                 if (BtnC) begin
                     if (cursor_contents[3] != player_to_move
-                        || cursor_contents[2:0] == 3'b000)
+                        || cursor_contents[2:0] == PIECE_NONE)
                         state <= WRITE_NEW_PIECE; // either the other color pieces or an empty square
                     // if the player clicked their own piece, we remain here and select that piece
                 end
@@ -153,17 +153,96 @@ always @ (posedge CLK, posedge RESET) begin
 
                 // RTL operations
                 if (BtnC) begin
-                    if (cursor_contents[3] != player_to_move
-                        || cursor_contents[2:0] == 3'b000)
+                    if (selected_contents[2:0] == PIECE_KING)
+                    begin
+                        // see if we want to castle 
+                        if (selected_contents[3] == COLOR_WHITE
+                            && white_can_castle_short
+                            && selected_piece_addr == 6'b111_100 // king is on home
+                            && cursor_addr == 6'b111_110 // target castle square
+                            && board[6'b111_101][2:0] == PIECE_NONE // no obstructions
+                            && board[6'b111_110][2:0] == PIECE_NONE
+                            && board[6'b111_111] == {COLOR_WHITE, PIECE_ROOK}
+                            && player_to_move == COLOR_WHITE) begin
+                                // WHITE CASTLES SHORT
+                                castle_state <= WRITE_KING;
+                                board_out_addr <= 6'b111_110;
+                                board_out_piece <= {COLOR_WHITE, PIECE_KING};
+                                board_change_enable <= 1;
+                            end
+
+                        else if(selected_contents[3] == COLOR_WHITE
+                            && white_can_castle_long
+                            && selected_piece_addr == 6'b111_100 // king is on home
+                            && cursor_addr == 6'b111_010 // target castle square
+                            && board[6'b111_001][2:0] == PIECE_NONE
+                            && board[6'b111_010][2:0] == PIECE_NONE // no obstructions
+                            && board[6'b111_011][2:0] == PIECE_NONE
+                            && board[6'b111_000] == {COLOR_WHITE, PIECE_ROOK}
+                            && player_to_move == COLOR_WHITE) begin
+                                // WHITE CASTLES LONG
+                                castle_state <= WRITE_KING;
+                                board_out_addr <= 6'b111_010;
+                                board_out_piece <= {COLOR_WHITE, PIECE_KING};
+                                board_change_enable <= 1;
+                            end
+
+                        else if (selected_contents[3] == COLOR_BLACK
+                            && black_can_castle_short
+                            && selected_piece_addr == 6'b000_100 // king is on home
+                            && cursor_addr == 6'b000_110 // target castle square
+                            && board[6'b000_101][2:0] == PIECE_NONE // no obstructions
+                            && board[6'b000_110][2:0] == PIECE_NONE
+                            && board[6'b000_111] == {COLOR_BLACK, PIECE_ROOK}
+                            && player_to_move == COLOR_BLACK) begin
+                                // BLACK CASTLES SHORT
+                                castle_state <= WRITE_KING;
+                                board_out_addr <= 6'b000_110;
+                                board_out_piece <= {COLOR_BLACK, PIECE_KING};
+                                board_change_enable <= 1;
+                            end
+
+                        else if(selected_contents[3] == COLOR_WHITE
+                            && black_can_castle_long
+                            && selected_piece_addr == 6'b000_100 // king is on home
+                            && cursor_addr == 6'b000_010 // target castle square
+                            && board[6'b000_001][2:0] == PIECE_NONE
+                            && board[6'b000_010][2:0] == PIECE_NONE // no obstructions
+                            && board[6'b000_011][2:0] == PIECE_NONE
+                            && board[6'b000_000] == {COLOR_WHITE, PIECE_ROOK}
+                            && player_to_move == COLOR_WHITE) begin
+                                // BLACK CASTLES LONG
+                                castle_state <= WRITE_KING;
+                                board_out_addr <= 6'b000_010;
+                                board_out_piece <= {COLOR_BLACK, PIECE_KING};
+                                board_change_enable <= 1;
+                            end
+                    end
+                    else if (cursor_contents[3] != player_to_move
+                        || cursor_contents[2:0] == PIECE_NONE)
                     begin
                         // they clicked either an empty space of the other color piece
                         // going to WRITE_NEW_PIECE
                         board_out_addr <= cursor_contents;
                         board_out_piece <= selected_contents;
                         board_change_enable <= 1;
+
+                        // revoke castle rights if rook or king move
+                        if     (seleceted_piece_addr == 6'b111_000) white_can_castle_long <= 0;
+                        else if(seleceted_piece_addr == 6'b111_111) white_can_castle_short <= 0;
+                        else if(seleceted_piece_addr == 6'b000_000) black_can_castle_long <= 0;
+                        else if(seleceted_piece_addr == 6'b000_111) black_can_castle_short <= 0;
+                        else if(selected_contents == {COLOR_WHITE, PIECE_KING}) begin
+                            white_can_castle_long <= 0;
+                            white_can_castle_short <= 0;
+                        end
+                        else if(selected_contents == {COLOR_BLACK, PIECE_KING}) begin
+                            black_can_castle_long <= 0;
+                            black_can_castle_short <= 0;
+                        end
                     end
                     else if (cursor_contents[3] == player_to_move
-                        || cursor_contents[2:0] == 3'b000)
+                        || cursor_contents[2:0] == PIECE_NONE)
                     begin
                         // they clicked their own piece
                         selected_piece_addr <= cursor_addr;
@@ -200,6 +279,72 @@ always @ (posedge CLK, posedge RESET) begin
             begin
                 // TODO implement castling.
                 // this will be a sub-state machine to handle the four different states
+                case (castle_state)
+                WRITE_KING: 
+                begin
+                    // king being written in last step; erase king next
+                    board_out_addr <= selected_piece_addr;
+                    board_out_piece <= {COLOR_WHITE, PIECE_NONE};
+                    board_change_enable <= 1;
+
+                    castle_state <= ERASE_KING;
+                end
+
+                ERASE_KING:
+                begin
+                    // king being erased by last step; write rook next
+                    board_change_enable <= 1;
+                    castle_state <= WRITE_ROOK;
+
+                    if(cursor_addr == 6'b111_110) begin // white short
+                        board_out_addr <= 6'b111_101;
+                        board_out_piece <= {COLOR_WHITE, PIECE_ROOK};
+                    end
+                    else if(cursor_addr == 6'b111_010) begin // white long
+                        board_out_addr <= 6'b111_011;
+                        board_out_piece <= {COLOR_WHITE, PIECE_ROOK};
+                    end
+                    else if(cursor_addr == 6'b000_110) begin // black short
+                        board_out_addr <= 6'b000_101;
+                        board_out_piece <= {COLOR_BLACK, PIECE_ROOK};
+                    end
+                    else if(cursor_addr == 6'b000_010) begin // black long
+                        board_out_addr <= 6'b000_011;
+                        board_out_piece <= {COLOR_BLACK, PIECE_ROOK};
+                    end
+                end
+
+                WRITE_ROOK:
+                begin
+                    // rook being written by last step; erase rook next
+                    board_out_piece <= {COLOR_WHITE, PIECE_NONE};
+                    board_change_enable <= 1;
+                    castle_state <= ERASE_ROOK;
+
+                    if     (cursor_addr == 6'b111_110) board_out_addr <= 6'b111_111; // white short
+                    else if(cursor_addr == 6'b111_010) board_out_addr <= 6'b111_000; // white long
+                    else if(cursor_addr == 6'b000_110) board_out_addr <= 6'b000_111; // black short
+                    else if(cursor_addr == 6'b000_010) board_out_addr <= 6'b000_011; // black long
+                end
+
+                ERASE_ROOK:
+                begin
+                    // done with castle operation, setup next move
+                    player_to_move <= ~player_to_move;
+                    state <= PIECE_SEL;
+                    board_change_enable <= 0;
+                    hilite_selected_square <= 0;
+
+                    if (player_to_move == COLOR_WHITE) begin
+                        white_can_castle_long <= 0;
+                        white_can_castle_short <= 0;
+                    end
+                    else begin
+                        black_can_castle_short <= 0;
+                        black_can_castle_long <= 0;
+                    end
+                end
+                endcase
             end
 			endcase
 	 
