@@ -23,6 +23,7 @@ Board addresses:
 	-Trick to determine color: if bit 3 XOR bit 0 = 0, the square is WHITE
 							   if bit 3 XOR bit 0 = 1, the square is BLACK
 
+				BLACK
 	000 001 010 011 100 101 110 111
 000  r   n   b   q   k   b   n   r
 001  p   p   p   p   p   p   p   p
@@ -32,3 +33,4 @@ Board addresses:
 101
 110  P   P   P   P   P   P   P   P
 111  R   N   B   Q   K   B   N   R
+				WHITE

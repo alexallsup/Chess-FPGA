@@ -30,7 +30,7 @@ module game_logic(
     BtnD,
     BtnC,
     cursor_addr,
-    selected_piece_addr,
+    selected_addr,
     hilite_selected_square
     );
 
@@ -55,13 +55,13 @@ output reg board_change_enable; // signal the board reg in top to write the new 
 
 // outputs for communicating with the VGA module
 output reg[5:0] cursor_addr;
-output reg[5:0] selected_piece_addr;
+output reg[5:0] selected_addr;
 output reg hilite_selected_square;
 
 // wires for the contents of the board input
 wire[3:0] cursor_contents, selected_contents;
 assign cursor_contents = board[cursor_addr]; // contents of the cursor square
-assign selected_contents = board[selected_piece_addr]; // contents of the selected square
+assign selected_contents = board[selected_addr]; // contents of the selected square
 
 /* Piece Definitions */
 localparam PIECE_NONE   = 3'b000;
@@ -79,6 +79,8 @@ localparam COLOR_BLACK  = 1;
 reg player_to_move;
 reg white_can_castle_long, white_can_castle_short, // moving a rook or king removes castling rights
     black_can_castle_long, black_can_castle_short; // so we need flags to track it
+
+wire move_is_legal; // signal will be generated in combinational logic
 
 /* State Machine Definition */
 // we're gonna use encoded-assignment bc I can
@@ -104,7 +106,7 @@ always @ (posedge CLK, posedge RESET) begin
         black_can_castle_long  <= 1;
         
         cursor_addr <= 6'b110_100; // white's king pawn, most common starting move
-        selected_piece_addr <= 6'bXXXXXX;
+        selected_addr <= 6'bXXXXXX;
         hilite_selected_square <= 0;
 
         board_out_addr <= 6'bXXXXXX;
@@ -135,7 +137,7 @@ always @ (posedge CLK, posedge RESET) begin
                     && cursor_contents[3] == player_to_move
                     && cursor_contents[2:0] != PIECE_NONE) // TODO verify addressing
                 begin
-                    selected_piece_addr <= cursor_addr;
+                    selected_addr <= cursor_addr;
                     hilite_selected_square <= 1;
                 end
             end
@@ -158,7 +160,7 @@ always @ (posedge CLK, posedge RESET) begin
                         // see if we want to castle 
                         if (selected_contents[3] == COLOR_WHITE
                             && white_can_castle_short
-                            && selected_piece_addr == 6'b111_100 // king is on home
+                            && selected_addr == 6'b111_100 // king is on home
                             && cursor_addr == 6'b111_110 // target castle square
                             && board[6'b111_101][2:0] == PIECE_NONE // no obstructions
                             && board[6'b111_110][2:0] == PIECE_NONE
@@ -173,7 +175,7 @@ always @ (posedge CLK, posedge RESET) begin
 
                         else if(selected_contents[3] == COLOR_WHITE
                             && white_can_castle_long
-                            && selected_piece_addr == 6'b111_100 // king is on home
+                            && selected_addr == 6'b111_100 // king is on home
                             && cursor_addr == 6'b111_010 // target castle square
                             && board[6'b111_001][2:0] == PIECE_NONE
                             && board[6'b111_010][2:0] == PIECE_NONE // no obstructions
@@ -189,7 +191,7 @@ always @ (posedge CLK, posedge RESET) begin
 
                         else if (selected_contents[3] == COLOR_BLACK
                             && black_can_castle_short
-                            && selected_piece_addr == 6'b000_100 // king is on home
+                            && selected_addr == 6'b000_100 // king is on home
                             && cursor_addr == 6'b000_110 // target castle square
                             && board[6'b000_101][2:0] == PIECE_NONE // no obstructions
                             && board[6'b000_110][2:0] == PIECE_NONE
@@ -204,7 +206,7 @@ always @ (posedge CLK, posedge RESET) begin
 
                         else if(selected_contents[3] == COLOR_WHITE
                             && black_can_castle_long
-                            && selected_piece_addr == 6'b000_100 // king is on home
+                            && selected_addr == 6'b000_100 // king is on home
                             && cursor_addr == 6'b000_010 // target castle square
                             && board[6'b000_001][2:0] == PIECE_NONE
                             && board[6'b000_010][2:0] == PIECE_NONE // no obstructions
@@ -217,9 +219,27 @@ always @ (posedge CLK, posedge RESET) begin
                                 board_out_piece <= {COLOR_BLACK, PIECE_KING};
                                 board_change_enable <= 1;
                             end
+                        else if(move_is_legal)
+                            // for normal king move
+                            // state going to WRITE_NEW_PIECE  
+                            board_out_addr <= cursor_contents;
+                            board_out_piece <= selected_contents;
+                            board_change_enable <= 1;
+
+                            // revoke castle rights:
+                            if(selected_contents[3] == COLOR_WHITE) begin
+                                white_can_castle_short <= 0;
+                                white_can_castle_long  <= 0;
+                            end
+                            else if(selected_contents[3] == COLOR_BLACK) begin
+                                black_can_castle_short <= 0;
+                                black_can_castle_long  <= 0;
+                            end
+                        end
                     end
-                    else if (cursor_contents[3] != player_to_move
-                        || cursor_contents[2:0] == PIECE_NONE)
+                    else if (   (cursor_contents[3] != player_to_move
+                                || cursor_contents[2:0] == PIECE_NONE)
+                            && move_is_legal)
                     begin
                         // they clicked either an empty space of the other color piece
                         // going to WRITE_NEW_PIECE
@@ -227,25 +247,17 @@ always @ (posedge CLK, posedge RESET) begin
                         board_out_piece <= selected_contents;
                         board_change_enable <= 1;
 
-                        // revoke castle rights if rook or king move
-                        if     (seleceted_piece_addr == 6'b111_000) white_can_castle_long <= 0;
-                        else if(seleceted_piece_addr == 6'b111_111) white_can_castle_short <= 0;
-                        else if(seleceted_piece_addr == 6'b000_000) black_can_castle_long <= 0;
-                        else if(seleceted_piece_addr == 6'b000_111) black_can_castle_short <= 0;
-                        else if(selected_contents == {COLOR_WHITE, PIECE_KING}) begin
-                            white_can_castle_long <= 0;
-                            white_can_castle_short <= 0;
-                        end
-                        else if(selected_contents == {COLOR_BLACK, PIECE_KING}) begin
-                            black_can_castle_long <= 0;
-                            black_can_castle_short <= 0;
-                        end
+                        // revoke castle rights if rook move (king move handled in the other if branch)
+                        if     (selected_piece_addr == 6'b111_000) white_can_castle_long <= 0;
+                        else if(selected_piece_addr == 6'b111_111) white_can_castle_short <= 0;
+                        else if(selected_piece_addr == 6'b000_000) black_can_castle_long <= 0;
+                        else if(selected_piece_addr == 6'b000_111) black_can_castle_short <= 0;
                     end
                     else if (cursor_contents[3] == player_to_move
                         || cursor_contents[2:0] == PIECE_NONE)
                     begin
                         // they clicked their own piece
-                        selected_piece_addr <= cursor_addr;
+                        selected_addr <= cursor_addr;
                     end
                 end
             end
@@ -258,7 +270,7 @@ always @ (posedge CLK, posedge RESET) begin
                 // RTL operations
                 // going to ERASE_OLD_PIECE
                 board_change_enable <= 1; // already done but it doesn't hurt here
-                board_out_addr <= selected_piece_addr;
+                board_out_addr <= selected_addr;
                 board_out_piece <= 4'b0000; // no piece
             end
 
@@ -283,7 +295,7 @@ always @ (posedge CLK, posedge RESET) begin
                 WRITE_KING: 
                 begin
                     // king being written in last step; erase king next
-                    board_out_addr <= selected_piece_addr;
+                    board_out_addr <= selected_addr;
                     board_out_piece <= {COLOR_WHITE, PIECE_NONE};
                     board_change_enable <= 1;
 
@@ -356,5 +368,98 @@ always @ (posedge CLK, posedge RESET) begin
     end
 end
 
+/* Combinational logic to determine if the selected piece can move as desired */
+// really only valid when in PIECE_MOVE state
+// selected_contents is the piece we're trying to move
+// selected_addr is the old location
+// cursor_addr is the destination square
+wire[3:0] h_delta;
+wire[3:0] v_delta;
+assign h_delta = cursor_addr[2:0] - selected_addr[2:0]; // + means moving right
+assign v_delta = cursor_addr[5:3] - selected_addr[5:3]; // + means moving down (black forward)
+
+always @(*) begin
+    case (selected_contents[2:0])
+        PIECE_PAWN:
+        begin
+            if (player_to_move == COLOR_WHITE) begin // pawn moves forward (decreasing MSB)
+                if (v_delta == -2 // skip forward by 2?
+                    && h_delta == 0 // not moving diagonally?
+                    && selected_addr[5:3] == 3'b110 // moving from home row?
+                    && cursor_contents[2:0] == PIECE_NONE // no piece at dest?
+                    && board[selected_addr + 6'b001_000][2:0] == PIECE_NONE) // no piece in way? 
+                    move_is_legal = 1; // moving from home row by 2
+                else if(v_delta == -1 // move forward by 1?
+                    && h_delta == 0
+                    && cursor_contents[2:0] == PIECE_NONE)
+                    move_is_legal = 1;
+                else if(v_delta == -1
+                    && (h_delta==-1 || h_delta==1) // moving diagonally by 1?
+                    && cursor_contents[3] == COLOR_BLACK // capturing opponent?
+                    && cursor_contents[2:0] != PIECE_NONE) // capturing something?
+                    move_is_legal = 1;
+                else move_is_legal = 0;
+                // TODO implement en passant
+            end
+            else if (player_to_move == COLOR_BLACK) begin
+                if (v_delta == 2 // skip forward by 2?
+                    && h_delta == 0 // not moving diagonally?
+                    && selected_addr[5:3] == 3'b110 // moving from home row?
+                    && cursor_contents[2:0] == PIECE_NONE // no piece at dest?
+                    && board[selected_addr + 6'b001_000][2:0] == PIECE_NONE) // no piece in way? 
+                    move_is_legal = 1; // moving from home row by 2
+                else if(v_delta == 1 // move forward by 1?
+                    && h_delta == 0
+                    && cursor_contents[2:0] == PIECE_NONE)
+                    move_is_legal = 1;
+                else if(v_delta == 1
+                    && (h_delta==-1 || h_delta==1) // moving diagonally by 1?
+                    && cursor_contents[3] == COLOR_BLACK // capturing opponent?
+                    && cursor_contents[2:0] != PIECE_NONE) // capturing something?
+                    move_is_legal = 1;
+                else move_is_legal = 0;
+                // TODO implement en passant
+            end
+        end
+
+        PIECE_ROOK:
+        begin
+            move_is_legal = (h_delta==0 || vdelta==0);
+            // well that was easy
+        end
+
+        PIECE_QUEEN:
+        begin
+            move_is_legal =
+                (  h_delta==0 || v_delta==0  // "rook" move
+                || h_delta == v_delta       // "bishop" move pt1
+                || h_delta == v_delta*-1);  // "bishop" move pt2
+        end
+
+        PIECE_KING:
+        begin
+            move_is_legal =
+                (  h_delta <= 1
+                && h_delta >= -1
+                && v_delta <= 1
+                && v_delta >= -1);
+        end
+
+        PIECE_BISHOP:
+        begin
+            move_is_legal =
+                (  h_delta == v_delta       
+                || h_delta == v_delta*-1);
+        end
+
+        PIECE_KNIGHT:
+        begin
+            // must move "L" shape (2 in one dir and 1 in the other)
+            move_is_legal =
+                (   ( h_delta==-2 || h_delta==2) && (v_delta==-1 || v_delta==1 )
+                ||  ( v_delta==-2 || v_delta==2) && (h_delta==-1 || h_delta==1 ))
+        end
+    endcase
+end
 
 endmodule
