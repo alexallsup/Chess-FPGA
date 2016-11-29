@@ -20,9 +20,12 @@
 //////////////////////////////////////////////////////////////////////////////////
 module chess_top( MemOE, MemWR, RamCS, FlashCS, QuadSpiFlashCS, // Disable the three memory chips
       ClkPort, // ClkPort will be the board's 100MHz clk
-      Reset,
 		BtnL, BtnU, BtnD, BtnR, BtnC,
-		Sw0 // For reset    
+		Sw0, // For reset   
+		vga_hsync, vga_vsync, 
+		vga_r0, vga_r1, vga_r2,
+		vga_g0, vga_g1, vga_g2,
+		vga_b0, vga_b1 
     );
 	 
 /*  INPUTS */
@@ -33,7 +36,25 @@ wire Reset;
 assign Reset = Sw0;
 
 /* OUTPUTS */
-output 	MemOE, MemWR, RamCS, FlashCS, QuadSpiFlashCS; // just to disable them all
+output wire	MemOE, MemWR, RamCS, FlashCS, QuadSpiFlashCS; // just to disable them all
+	assign MemOE = 0;
+	assign MemWR = 0;
+	assign RamCS = 0;
+	assign FlashCS = 0;
+	assign QuadSpiFlashCS = 0;
+output wire vga_hsync, vga_vsync; 
+output wire vga_r0, vga_r1, vga_r2;
+output wire vga_g0, vga_g1, vga_g2;
+output wire vga_b0, vga_b1;
+
+// connect the vga color buses to the top design's outputs
+wire[2:0] vga_r;
+wire[2:0] vga_g;
+wire[1:0] vga_b;
+assign vga_r0 = vga_r[2]; assign vga_r1 = vga_r[1]; assign vga_r2 = vga_r[0];
+assign vga_g0 = vga_g[2]; assign vga_g1 = vga_g[1]; assign vga_g2 = vga_b[0];
+assign vga_b0 = vga_b[1]; assign vga_b1 = vga_b[0];
+
 
 /* Clocking */
 input ClkPort;
@@ -70,29 +91,6 @@ input_debounce C_debounce(
 	.CLK(debounce_clk), .RESET(Reset),
 	.Btn(BtnC), .Btn_pulse(BtnC_pulse));
 
-/* Init game logic module and its output wires */
-wire[5:0] board_change_addr;
-wire[3:0] board_change_piece;
-wire board_change_enable;
-wire[5:0] cursor_addr;
-wire[5:0] selected_piece_addr;
-wire hilite_selected_square;
-
-game_logic logic_module(
-	.CLK(game_logic_clk), 
-	.RESET(Reset),
-	.board_input(board),
-
-	.board_out_addr(board_change_addr),
-	.board_out_piece(board_change_piece),
-	.board_change_enable(board_change_enable),
-	.cursor_addr(cursor_addr),
-	.selected_piece_addr(selected_piece_addr),
-	.hilite_selected_square(hilite_selected_square),
-
-	.BtnU(BtnU_pulse), .BtnL(BtnL_pulse), .BtnC(BtnC_pulse),
-	.BtnR(BtnR_pulse), .BtnD(BtnD_pulse)
-	);
 
  
 /* Piece Definitions */
@@ -109,6 +107,13 @@ localparam COLOR_BLACK	= 1;
 
 /* Setup Board */
 reg [3:0] board[63:0];
+wire [255:0] passable_board;
+
+genvar i;
+generate for (i=0; i<64; i=i+1) begin: BOARD
+	assign passable_board[i*4+3 : i*4] = board[i];
+end
+endgenerate
 
 initial
 begin: INITIALIZE_BOARD
@@ -186,11 +191,48 @@ begin: INITIALIZE_BOARD
 	
 end
 
+/* Init game logic module and its output wires */
+wire[5:0] board_change_addr;
+wire[3:0] board_change_piece;
+wire board_change_enable;
+wire[5:0] cursor_addr;
+wire[5:0] selected_piece_addr;
+wire hilite_selected_square;
+
+game_logic logic_module(
+	.CLK(game_logic_clk), 
+	.RESET(Reset),
+	.board_input(passable_board),
+
+	.board_out_addr(board_change_addr),
+	.board_out_piece(board_change_piece),
+	.board_change_enable(board_change_enable),
+	.cursor_addr(cursor_addr),
+	.selected_addr(selected_piece_addr),
+	.hilite_selected_square(hilite_selected_square),
+
+	.BtnU(BtnU_pulse), .BtnL(BtnL_pulse), .BtnC(BtnC_pulse),
+	.BtnR(BtnR_pulse), .BtnD(BtnD_pulse)
+	);
+
 /* Setup connections from game logic to board register */
 always @(posedge game_logic_clk) 
 begin
 	if (board_change_enable) board[board_change_addr] <= board_change_piece;
 end
 
-
+/* Init VGA interface */
+display_interface display_interface(
+	.CLK(vga_clk), // 25 MHz
+	.RESET(Reset),
+	.HSYNC(vga_hsync), // direct outputs to VGA monitor
+	.VSYNC(vga_vsync),
+	.R(vga_r),
+	.G(vga_g),
+	.B(vga_b),
+	.BOARD(passable_board), // the 64x4 array for the board contents
+	.CURSOR_ADDR(cursor_addr), // 6 bit address showing what square to hilite
+	.SELECT_ADDR(selected_piece_addr), // 6b address showing the address of which piece is selected
+	.SELECT_EN(hilite_selected_square)); // binary flag to show a selected piece
+	
 endmodule

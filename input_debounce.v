@@ -4,9 +4,9 @@
 // Implementation based off the design in the debouncing lab
 // State diagram found on page 3 of the lab manual
 
-module btn_debouncer(
-	input CLK, input RESET,
-	input Btn, output Btn_pulse);
+module input_debounce(
+	CLK, RESET,
+   Btn, Btn_pulse);
 
 // inputs 
 input CLK; // should be at about 24.4 kHz
@@ -20,7 +20,7 @@ localparam INIT = 3'b000, WQ = 3'b001, SCEN_St = 3'b010, CCR = 3'b011, WFCR = 3'
 reg[2:0] state;
 
 localparam max_i = 6100; // should yield a wait time of approx 0.25s
-reg I;
+reg[13:0] I;
 
 always @(posedge CLK, posedge RESET)
 begin
@@ -73,6 +73,7 @@ begin
 
 				I <= I + 1;
 			end
+		endcase
 	end
 end
 
