@@ -1,6 +1,6 @@
-`timescale 1ns / 1ps;
+`timescale 1ns / 1ps
 
-module game_logic_tb.v();
+module game_logic_tb();
 
 /* Clocking: CLK has period=20ns */
 reg CLK;
@@ -44,15 +44,8 @@ generate for (i=0; i<64; i=i+1) begin: BOARD
 end
 endgenerate
 
-/* Init game logic module and its output wires */
-wire[5:0] board_change_addr;
-wire[3:0] board_change_piece;
-wire board_change_enable;
-wire[5:0] cursor_addr;
-wire[5:0] selected_piece_addr;
-wire hilite_selected_square;
-
-game_logic logic_module(
+// Init UUT (Game logic module)
+game_logic game_logic(
 	.CLK(CLK), 
 	.RESET(Reset),
 	.board_input(passable_board),
@@ -101,7 +94,7 @@ task DISPLAY_BOARD;
 	end
 endtask
 
-task LOAD_BOARD;
+task LOAD_BOARD begin
 	input[3:0] test_num; // 
 	input_file = $fopen("test1.txt", "r");
 	integer r1[3:0], c1[3:0];
@@ -109,26 +102,26 @@ task LOAD_BOARD;
 		for (c1=0; c1<8; c1=c1+1) begin
 			reg[3:0] char_in = $fgetc(input_file);
 			case(char_in)
-				"K": board[{r1[2:0], c1[2:0]}] 		= {COLOR_WHITE, PIECE_KING};
-				"Q": board[{r1[2:0], c1[2:0]}] 		= {COLOR_WHITE, PIECE_QUEEN};
-				"R": board[{r1[2:0], c1[2:0]}] 		= {COLOR_WHITE, PIECE_ROOK};
-				"N": board[{r1[2:0], c1[2:0]}] 		= {COLOR_WHITE, PIECE_KNIGHT};
-				"B": board[{r1[2:0], c1[2:0]}] 		= {COLOR_WHITE, PIECE_BISHOP};
-				"P": board[{r1[2:0], c1[2:0]}] 		= {COLOR_WHITE, PIECE_PAWN};
-				"O": board[{r1[2:0], c1[2:0]}] 		= {COLOR_WHITE, PIECE_NONE};
-				"k": board[{r1[2:0], c1[2:0]}] 		= {COLOR_BLACK, PIECE_KING};
-				"q": board[{r1[2:0], c1[2:0]}] 		= {COLOR_BLACK, PIECE_QUEEN};
-				"r": board[{r1[2:0], c1[2:0]}] 		= {COLOR_BLACK, PIECE_ROOK};
-				"n": board[{r1[2:0], c1[2:0]}] 		= {COLOR_BLACK, PIECE_KNIGHT};
-				"b": board[{r1[2:0], c1[2:0]}] 		= {COLOR_BLACK, PIECE_BISHOP};
-				"p": board[{r1[2:0], c1[2:0]}] 		= {COLOR_BLACK, PIECE_PAWN};
-				"x": board[{r1[2:0], c1[2:0]}] 		= {COLOR_WHITE, PIECE_NONE};
-				default : board[{r1[2:0], c1[2:0]}] 	= {COLOR_WHITE, PIECE_NONE};
+				"K": board[{r1[2:0], c1[2:0]}] 		<= {COLOR_WHITE, PIECE_QUEEN};
+				"R": board[{r1[2:0], c1[2:0]}] 		<= {COLOR_WHITE, PIECE_ROOK};
+				"N": board[{r1[2:0], c1[2:0]}] 		<= {COLOR_WHITE, PIECE_KNIGHT};
+				"B": board[{r1[2:0], c1[2:0]}] 		<= {COLOR_WHITE, PIECE_BISHOP};
+				"P": board[{r1[2:0], c1[2:0]}] 		<= {COLOR_WHITE, PIECE_PAWN};
+				"O": board[{r1[2:0], c1[2:0]}] 		<= {COLOR_WHITE, PIECE_NONE};
+				"k": board[{r1[2:0], c1[2:0]}] 		<= {COLOR_BLACK, PIECE_KING};
+				"q": board[{r1[2:0], c1[2:0]}] 		<= {COLOR_BLACK, PIECE_QUEEN};
+				"r": board[{r1[2:0], c1[2:0]}] 		<= {COLOR_BLACK, PIECE_ROOK};
+				"n": board[{r1[2:0], c1[2:0]}] 		<= {COLOR_BLACK, PIECE_KNIGHT};
+				"b": board[{r1[2:0], c1[2:0]}] 		<= {COLOR_BLACK, PIECE_BISHOP};
+				"p": board[{r1[2:0], c1[2:0]}] 		<= {COLOR_BLACK, PIECE_PAWN};
+				"x": board[{r1[2:0], c1[2:0]}] 		<= {COLOR_WHITE, PIECE_NONE};
+				default : board[{r1[2:0], c1[2:0]}] <= {COLOR_WHITE, PIECE_NONE};
 			endcase
 		end
 	end
 
 	$fclose(input_file);
+end
 endtask
 
 task BTNU_PRESS;

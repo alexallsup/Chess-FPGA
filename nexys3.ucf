@@ -9,22 +9,14 @@
 # signal names. So we are not using the center button of the 5 buttons on the Nexys-3 board
 
 # ***************
-# Memories disabling
-# Five Nexys-3 signal lines are commented out and five Nexys-2 signal names are used.
-# Replace the Nexys-3 names MemOE, MemWR, RamCS, FlashCS, QuadSpiFlashCS
-# with the Nexys-2 names Mt_St_oe_bar, Mt_St_we_bar, Mt_ce_bar, St_ce_bar, St_rp_bar,   
+# Memories disabling   
 # Disable MT45W8MW16BGX
-#Net "MemOE" LOC = L18 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L46N_FOE_B_M1DQ3, Sch name = P30-OE
-Net "Mt_St_oe_bar" LOC = L18 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L46N_FOE_B_M1DQ3, Sch name = P30-OE
-#Net "MemWR" LOC = M16 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L47P_FWE_B_M1DQ0, Sch name = P30-WE
-Net "Mt_St_we_bar" LOC = M16 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L47P_FWE_B_M1DQ0, Sch name = P30-WE
-#Net "RamCS" LOC = L15 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L42P_GCLK7_M1UDM, Sch name = MT-CE
-Net "Mt_ce_bar" LOC = L15 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L42P_GCLK7_M1UDM, Sch name = MT-CE
+Net "MemOE" LOC = L18 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L46N_FOE_B_M1DQ3, Sch name = P30-OE
+Net "MemWR" LOC = M16 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L47P_FWE_B_M1DQ0, Sch name = P30-WE
+Net "RamCS" LOC = L15 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L42P_GCLK7_M1UDM, Sch name = MT-CE
 # Disable NP8P128A13T1760E NP8P128
-#Net "FlashCS" LOC = L17 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L46P_FCS_B_M1DQ2, Sch name = P30-CE
-Net "St_ce_bar" LOC = L17 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L46P_FCS_B_M1DQ2, Sch name = P30-CE
-#Net "QuadSpiFlashCS" LOC = V3  | IOSTANDARD = LVCMOS33; #Bank = MISC, pin name = IO_L65N_CSO_B_2, Sch name = CS
-Net "St_rp_bar" LOC = V3  | IOSTANDARD = LVCMOS33; #Bank = MISC, pin name = IO_L65N_CSO_B_2, Sch name = CS
+Net "FlashCS" LOC = L17 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L46P_FCS_B_M1DQ2, Sch name = P30-CE
+Net "QuadSpiFlashCS" LOC = V3  | IOSTANDARD = LVCMOS33; #Bank = MISC, pin name = IO_L65N_CSO_B_2, Sch name = CS
 # ***************
 
 
@@ -46,53 +38,44 @@ Net "Sw0" LOC = T10 | IOSTANDARD = LVCMOS33; #Bank = 2, pin name = IO_L29N_GCLK2
 #Net "Sw7" LOC = T5 | IOSTANDARD = LVCMOS33; #Bank = MISC, pin name = IO_L48N_RDWR_B_VREF_2, Sch name = SW7
 
 ## Leds for Nexys-3
-Net "Ld0" LOC = U16 | IOSTANDARD = LVCMOS33; #Bank = 2, pin name = IO_L2P_CMPCLK, Sch name = LD0
-Net "Ld1" LOC = V16 |  IOSTANDARD = LVCMOS33; #Bank = 2, pin name = IO_L2N_CMPMOSI, Sch name = LD1
-Net "Ld2" LOC = U15 |  IOSTANDARD = LVCMOS33; #Bank = 2, pin name = IO_L5P, Sch name = LD2
-Net "Ld3" LOC = V15 |  IOSTANDARD = LVCMOS33; #Bank = 2, pin name = IO_L5N, Sch name = LD3
-Net "Ld4" LOC = M11 |  IOSTANDARD = LVCMOS33; #Bank = 2, pin name = IO_L15P, Sch name = LD4
-Net "Ld5" LOC = N11 |  IOSTANDARD = LVCMOS33; #Bank = 2, pin name = IO_L15N, Sch name = LD5
-Net "Ld6" LOC = R11 |  IOSTANDARD = LVCMOS33; #Bank = 2, pin name = IO_L16P, Sch name = LD6
-Net "Ld7" LOC = T11 |  IOSTANDARD = LVCMOS33; #Bank = 2, pin name = IO_L16N_VREF, Sch name = LD7
+#Net "Ld0" LOC = U16 | IOSTANDARD = LVCMOS33; #Bank = 2, pin name = IO_L2P_CMPCLK, Sch name = LD0
+#Net "Ld1" LOC = V16 |  IOSTANDARD = LVCMOS33; #Bank = 2, pin name = IO_L2N_CMPMOSI, Sch name = LD1
+#Net "Ld2" LOC = U15 |  IOSTANDARD = LVCMOS33; #Bank = 2, pin name = IO_L5P, Sch name = LD2
+#Net "Ld3" LOC = V15 |  IOSTANDARD = LVCMOS33; #Bank = 2, pin name = IO_L5N, Sch name = LD3
+#Net "Ld4" LOC = M11 |  IOSTANDARD = LVCMOS33; #Bank = 2, pin name = IO_L15P, Sch name = LD4
+#Net "Ld5" LOC = N11 |  IOSTANDARD = LVCMOS33; #Bank = 2, pin name = IO_L15N, Sch name = LD5
+#Net "Ld6" LOC = R11 |  IOSTANDARD = LVCMOS33; #Bank = 2, pin name = IO_L16P, Sch name = LD6
+#Net "Ld7" LOC = T11 |  IOSTANDARD = LVCMOS33; #Bank = 2, pin name = IO_L16N_VREF, Sch name = LD7
 
-# ***************
-# Push button names adjustment
-# Mapping between Nexys-3 and Nexys-2
-# 	Nexys-2      	Nexys-3
-#	btn3			btnU
-#	btn2			btnL
-#	btn1			btnD
-#	btn0			btnR
-#	????			btnC   
-# The center button (btnC) on Nexys-3 left unused here. In newer designs, we will use it for RESET control.
+# ***************   
 
 ## We named the center button (at the center of the 5 buttons) as btnC. Digilent schematic label for this is BTNS
-#Net "btnC" LOC = B8 | IOSTANDARD = LVCMOS33; #Bank = 0, pin name = IO_L33P, Sch name = BTNS
-Net "btnU" LOC = A8 | IOSTANDARD = LVCMOS33; #Bank = 0, pin name = IO_L33N, Sch name = BTNU
+Net "BtnC" LOC = B8 | IOSTANDARD = LVCMOS33; #Bank = 0, pin name = IO_L33P, Sch name = BTNS
+Net "BtnU" LOC = A8 | IOSTANDARD = LVCMOS33; #Bank = 0, pin name = IO_L33N, Sch name = BTNU
 #Net "Btn3" LOC = A8 | IOSTANDARD = LVCMOS33; #Bank = 0, pin name = IO_L33N, Sch name = BTNU
-#Net "btnL" LOC = C4 | IOSTANDARD = LVCMOS33; #Bank = 0, pin name = IO_L1N_VREF, Sch name = BTNL
+Net "BtnL" LOC = C4 | IOSTANDARD = LVCMOS33; #Bank = 0, pin name = IO_L1N_VREF, Sch name = BTNL
 #Net "Btn2" LOC = C4 | IOSTANDARD = LVCMOS33; #Bank = 0, pin name = IO_L1N_VREF, Sch name = BTNL
-Net "btnD" LOC = C9 | IOSTANDARD = LVCMOS33; #Bank = 0, pin name = IO_L34N_GCLK18, Sch name = BTND
+Net "BtnD" LOC = C9 | IOSTANDARD = LVCMOS33; #Bank = 0, pin name = IO_L34N_GCLK18, Sch name = BTND
 #Net "Btn1" LOC = C9 | IOSTANDARD = LVCMOS33; #Bank = 0, pin name = IO_L34N_GCLK18, Sch name = BTND
-#Net "btnR" LOC = D9 | IOSTANDARD = LVCMOS33; # Bank = 0, pin name = IO_L34P_GCLK19, Sch name = BTNR
+Net "BtnR" LOC = D9 | IOSTANDARD = LVCMOS33; # Bank = 0, pin name = IO_L34P_GCLK19, Sch name = BTNR
 #Net "Btn0" LOC = D9 | IOSTANDARD = LVCMOS33; # Bank = 0, pin name = IO_L34P_GCLK19, Sch name = BTNR
 # ***************
 
 
 ## 7 segment display
-Net "Ca" LOC = T17 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L51P_M1DQ12, Sch name = CA
-Net "Cb" LOC = T18 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L51N_M1DQ13, Sch name = CB
-Net "Cc" LOC = U17 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L52P_M1DQ14, Sch name = CC
-Net "Cd" LOC = U18 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L52N_M1DQ15, Sch name = CD
-Net "Ce" LOC = M14 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L53P, Sch name = CE
-Net "Cf" LOC = N14 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L53N_VREF, Sch name = CF
-Net "Cg" LOC = L14 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L61P, Sch name = CG
-Net "Dp" LOC = M13 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L61N, Sch name = DP
-
-Net "An0" LOC = N16 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L50N_M1UDQSN, Sch name = AN0
-Net "An1" LOC = N15 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L50P_M1UDQS, Sch name = AN1
-Net "An2" LOC = P18 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L49N_M1DQ11, Sch name = AN2
-Net "An3" LOC = P17 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L49P_M1DQ10, Sch name = AN3
+#Net "Ca" LOC = T17 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L51P_M1DQ12, Sch name = CA
+#Net "Cb" LOC = T18 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L51N_M1DQ13, Sch name = CB
+#Net "Cc" LOC = U17 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L52P_M1DQ14, Sch name = CC
+#Net "Cd" LOC = U18 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L52N_M1DQ15, Sch name = CD
+#Net "Ce" LOC = M14 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L53P, Sch name = CE
+#Net "Cf" LOC = N14 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L53N_VREF, Sch name = CF
+#Net "Cg" LOC = L14 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L61P, Sch name = CG
+#Net "Dp" LOC = M13 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L61N, Sch name = DP
+#
+#Net "An0" LOC = N16 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L50N_M1UDQSN, Sch name = AN0
+#Net "An1" LOC = N15 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L50P_M1UDQS, Sch name = AN1
+#Net "An2" LOC = P18 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L49N_M1DQ11, Sch name = AN2
+#Net "An3" LOC = P17 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L49P_M1DQ10, Sch name = AN3
 
 ###############
 ## VGA Connector
@@ -105,8 +88,8 @@ NET "vga_g2" LOC = V6 | IOSTANDARD = LVCMOS33; # Bank = 2, pin name = IO_L45N, S
 NET "vga_b0" LOC = R7 | IOSTANDARD = LVCMOS33; # Bank = 2, pin name = IO_L46P, Sch name = BLU1
 NET "vga_b1" LOC = T7 | IOSTANDARD = LVCMOS33; # Bank = 2, pin name = IO_L46N, Sch name = BLU2
 
-NET "vga_h_sync" LOC = N6 | IOSTANDARD = LVCMOS33; # Bank = 2, pin name = IO_L47P, Sch name = HSYNC
-NET "vga_v_sync" LOC = P7 | IOSTANDARD = LVCMOS33; # Bank = 2, pin name = IO_L47N, Sch name = VSYNC
+NET "vga_hsync" LOC = N6 | IOSTANDARD = LVCMOS33; # Bank = 2, pin name = IO_L47P, Sch name = HSYNC
+NET "vga_vsync" LOC = P7 | IOSTANDARD = LVCMOS33; # Bank = 2, pin name = IO_L47N, Sch name = VSYNC
 #
 ##JA
 #Net "LCD_data[0]" LOC = T12 | IOSTANDARD = LVCMOS33; #Bank = 2, pin name = IO_L19P, Sch name = JA1

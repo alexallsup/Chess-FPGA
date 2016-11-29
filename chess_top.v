@@ -36,7 +36,12 @@ wire Reset;
 assign Reset = Sw0;
 
 /* OUTPUTS */
-output 	MemOE, MemWR, RamCS, FlashCS, QuadSpiFlashCS; // just to disable them all
+output wire	MemOE, MemWR, RamCS, FlashCS, QuadSpiFlashCS; // just to disable them all
+	assign MemOE = 0;
+	assign MemWR = 0;
+	assign RamCS = 0;
+	assign FlashCS = 0;
+	assign QuadSpiFlashCS = 0;
 output wire vga_hsync, vga_vsync; 
 output wire vga_r0, vga_r1, vga_r2;
 output wire vga_g0, vga_g1, vga_g2;
@@ -203,7 +208,7 @@ game_logic logic_module(
 	.board_out_piece(board_change_piece),
 	.board_change_enable(board_change_enable),
 	.cursor_addr(cursor_addr),
-	.selected_piece_addr(selected_piece_addr),
+	.selected_addr(selected_piece_addr),
 	.hilite_selected_square(hilite_selected_square),
 
 	.BtnU(BtnU_pulse), .BtnL(BtnL_pulse), .BtnC(BtnC_pulse),

@@ -80,7 +80,7 @@ reg player_to_move;
 reg white_can_castle_long, white_can_castle_short, // moving a rook or king removes castling rights
     black_can_castle_long, black_can_castle_short; // so we need flags to track it
 
-wire move_is_legal; // signal will be generated in combinational logic
+reg move_is_legal; // signal will be generated in combinational logic
 
 /* State Machine Definition */
 // we're gonna use encoded-assignment bc I can
@@ -248,10 +248,10 @@ always @ (posedge CLK, posedge RESET) begin
                         board_change_enable <= 1;
 
                         // revoke castle rights if rook move (king move handled in the other if branch)
-                        if     (selected_piece_addr == 6'b111_000) white_can_castle_long <= 0;
-                        else if(selected_piece_addr == 6'b111_111) white_can_castle_short <= 0;
-                        else if(selected_piece_addr == 6'b000_000) black_can_castle_long <= 0;
-                        else if(selected_piece_addr == 6'b000_111) black_can_castle_short <= 0;
+                        if     (selected_addr == 6'b111_000) white_can_castle_long <= 0;
+                        else if(selected_addr == 6'b111_111) white_can_castle_short <= 0;
+                        else if(selected_addr == 6'b000_000) black_can_castle_long <= 0;
+                        else if(selected_addr == 6'b000_111) black_can_castle_short <= 0;
                     end
                     else if (cursor_contents[3] == player_to_move
                         || cursor_contents[2:0] == PIECE_NONE)
@@ -259,7 +259,7 @@ always @ (posedge CLK, posedge RESET) begin
                         // they clicked their own piece
                         selected_addr <= cursor_addr;
                     end
-                end
+                
             end
 
             WRITE_NEW_PIECE:
@@ -379,8 +379,7 @@ assign h_delta = cursor_addr[2:0] - selected_addr[2:0]; // + means moving right
 assign v_delta = cursor_addr[5:3] - selected_addr[5:3]; // + means moving down (black forward)
 
 always @(*) begin
-    case (selected_contents[2:0])
-        PIECE_PAWN:
+    if(selected_contents[2:0] == PIECE_PAWN)
         begin
             if (player_to_move == COLOR_WHITE) begin // pawn moves forward (decreasing MSB)
                 if (v_delta == -2 // skip forward by 2?
@@ -422,13 +421,13 @@ always @(*) begin
             end
         end
 
-        PIECE_ROOK:
+    if(selected_contents[2:0] == PIECE_ROOK)
         begin
-            move_is_legal = (h_delta==0 || vdelta==0);
+            move_is_legal = (h_delta==0 || v_delta==0);
             // well that was easy
         end
 
-        PIECE_QUEEN:
+    if(selected_contents[2:0] == PIECE_QUEEN)
         begin
             move_is_legal =
                 (  h_delta==0 || v_delta==0  // "rook" move
@@ -436,7 +435,7 @@ always @(*) begin
                 || h_delta == v_delta*-1);  // "bishop" move pt2
         end
 
-        PIECE_KING:
+    if(selected_contents[2:0] == PIECE_KING)
         begin
             move_is_legal =
                 (  h_delta <= 1
@@ -445,21 +444,22 @@ always @(*) begin
                 && v_delta >= -1);
         end
 
-        PIECE_BISHOP:
+     if(selected_contents[2:0] == PIECE_BISHOP)
         begin
             move_is_legal =
                 (  h_delta == v_delta       
                 || h_delta == v_delta*-1);
         end
 
-        PIECE_KNIGHT:
+     if(selected_contents[2:0] == PIECE_KNIGHT)
         begin
             // must move "L" shape (2 in one dir and 1 in the other)
             move_is_legal =
                 (   ( h_delta==-2 || h_delta==2) && (v_delta==-1 || v_delta==1 )
-                ||  ( v_delta==-2 || v_delta==2) && (h_delta==-1 || h_delta==1 ))
+                ||  ( v_delta==-2 || v_delta==2) && (h_delta==-1 || h_delta==1 ));
         end
-    endcase
+     
+	  else move_is_legal = 0;
 end
 
 endmodule

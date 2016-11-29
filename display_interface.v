@@ -46,4 +46,17 @@ generate for (i=0; i<64; i=i+1) begin: REWIRE_BOARD
 end
 endgenerate
 
+always @(posedge RESET) begin
+	// need to give some dummy vals for now
+	if (board[6'b000_101] == 3'b101) begin
+	R <= 3'b000;
+	G <= 3'b000;
+	B <= 2'b00;
+	end
+	if (CURSOR_ADDR > 0) HSYNC <= 0;
+	if (SELECT_ADDR > 0) VSYNC <= 0;
+	else if (SELECT_EN) VSYNC <= 1;
+	else if (CLK) VSYNC <= 0;
+end
+
 endmodule
