@@ -91,8 +91,6 @@ input_debounce C_debounce(
 	.CLK(debounce_clk), .RESET(Reset),
 	.Btn(BtnC), .Btn_pulse(BtnC_pulse));
 
-
- 
 /* Piece Definitions */
 localparam PIECE_NONE 	= 3'b000;
 localparam PIECE_PAWN	= 3'b001;

@@ -27,10 +27,25 @@ module display_interface(
 	 
 input wire CLK, RESET;
 
-output reg HSYNC, VSYNC;
-output reg [2:0] R;
-output reg [2:0] G;
-output reg [1:0] B;
+reg [7:0] output_color;
+output wire HSYNC, VSYNC;
+output wire [2:0] R;
+output wire [2:0] G;
+output wire [1:0] B;
+assign R = {
+	output_color[7] & inDisplayArea,
+	output_color[6] & inDisplayArea,
+	output_color[5] & inDisplayArea
+};
+assign G = {
+	output_color[4] & inDisplayArea,
+	output_color[3] & inDisplayArea,
+	output_color[2] & inDisplayArea
+};
+assign B = {
+	output_color[1] & inDisplayArea,
+	output_color[0] & inDisplayArea
+};
 
 input wire [5:0] CURSOR_ADDR;
 input wire [5:0] SELECT_ADDR;
@@ -46,149 +61,298 @@ generate for (i=0; i<64; i=i+1) begin: REWIRE_BOARD
 end
 endgenerate
 
-always @(posedge RESET) begin
-	// need to give some dummy vals for now
-	/*if (board[6'b000_101] == 3'b101) begin
-	R <= 3'b000;
-	G <= 3'b000;
-	B <= 2'b00;*/
-		reg pawnArt [7:0][0:7] = {
-	8'b01111110,
-	8'b01111110,
-	8'b00111100,
-	8'b00011000,
-	8'b00011000,
-	8'b00011000,
-	8'b00111100,
-	8'b00011000};
-	
-	//00011000
-	//00111000
-	//01111110
-	//01111110
-	//00111100
-	//00011000
-	//00111100
-	//01111110
-	reg bishopArt [7:0][0:7] = {
-	8'b01111110,
-	8'b00111100,
-	8'b00011000,
-	8'b00111100,
-	8'b01111110,
-	8'b01111110,
-	8'b00011100,
-	8'b00011000};
-	
-	//00010000
-	//00111000
-	//01111110
-	//11111110
-	//11011100
-	//00011100
-	//00111110
-	//01111111
-	//reg [63:0] knightArt = 64'b0001000000111000011111101111111011011100000111000011111001111111;
-	//reg [63:0] knightArt = 64'b1111111001111100001110000011101101111111011111100001110000001000;
+// INIT the sync generator and its support wires
+wire inDisplayArea;
+wire [9:0] CounterX;
+wire [9:0] CounterY;
+hvsync_generator syncgen(.clk(CLK), .reset(RESET),
+	.vga_h_sync(HSYNC), 
+	.vga_v_sync(VSYNC), 
+	.inDisplayArea(inDisplayArea), 
+	.CounterX(CounterX), 
+	.CounterY(CounterY));
 
-	//01011010
-	//01011010
-	//01111110
-	//01111110
-	//00111100
-	//00111100
-	//01111110
-	//01111110
-	//reg [63:0] rookArt = 64'b0101101001011010011111100111111000111100001111000111111001111110;
-	//reg [63:0] rookArt = 64'b0111111001111110001111000011110001111110011111100101101001011010;
+/* Piece Definitions */
+localparam PIECE_NONE   = 3'b000;
+localparam PIECE_PAWN   = 3'b001;
+localparam PIECE_KNIGHT = 3'b010;
+localparam PIECE_BISHOP = 3'b011;
+localparam PIECE_ROOK   = 3'b100;
+localparam PIECE_QUEEN  = 3'b101;
+localparam PIECE_KING   = 3'b110;
 
-	//00000000
-	//10011001
-	//10011001
-	//11011011
-	//11111111
-	//11111111
-	//11111111
-	//01111110
-	//reg [63:0] queenArt = 0000000010011001100110011101101111111111111111111111111101111110;
-	//reg [63:0] queenArt = 64'b0111111011111111111111111111111111011011100110011001100100000000;
-	
-	//00000000
-	//00011000
-	//00011000
-	//01111110
-	//01111110
-	//00011000
-	//00011000
-	//00011000
-	//reg [63:0] kingArt = 0000000000011000000110000111111001111110000110000001100000011000
-	//reg [63:0] kingArt = 64'b0001100000011000000110000111111001111110000110000001100000000000;
-	
-	R <= 0;
-	G <= 1;
-	B <= 0;
-	if (CounterY >= 40 && CounterY < 440) 
-	begin
-		if (CounterX >= 120 && CounterX < 520)
-		begin
-			/*if ((((CounterY+10)/50) == (selectedTile / 8) + 1) && (((CounterX+30)/50) == (selectedTile % 8) + 3) && 
-					(((CounterY+10) % 50 < 2) || ((CounterY+10) % 50 > 47) || ((CounterX+30) % 50 < 2) || ((CounterX+30) % 50 > 47)))
-			begin
-				R <= 1;
-				G <= 0;
-				B <= 0;
-			end*/
-			if ((((CounterY+10)/50) == (selectedTile / 8) + 1) && (((CounterX+30)/50) == (selectedTile % 8) + 3))
-			begin
-				if (((CounterY+10) % 50 >= 5) && ((CounterY+10) % 50 < 45) && ((CounterX+30) % 50 >= 5) && ((CounterX+30) % 50 < 45))
-				//(bishopArt[((((CounterY+5)%50)/5) * 8) + (((CounterX+25)%50)/5)] == 1))
-					begin
-						if (pawnArt[(((CounterY+5)%50)/5)][(((CounterX+25)%50)/5)] == 1)
-						begin
-							R <= 1;
-							G <= 0;
-							B <= 0;
-						end
-						else
-						begin
-							R <= ((((CounterY+10)/50) + (CounterX+30)/50) %  2 == 0);
-							G <= ((((CounterY+10)/50) + (CounterX+30)/50) %  2 == 0);
-							B <= ((((CounterY+10)/50) + (CounterX+30)/50) %  2 == 0);
-						end
-					end
-				else
-					begin
-						R <= ((((CounterY+10)/50) + (CounterX+30)/50) %  2 == 0);
-						G <= ((((CounterY+10)/50) + (CounterX+30)/50) %  2 == 0);
-						B <= ((((CounterY+10)/50) + (CounterX+30)/50) %  2 == 0);
-					end
-			end
+localparam COLOR_WHITE  = 0;
+localparam COLOR_BLACK  = 1;
+
+// ARTWORK
+localparam pawnArt [0:7][0:7] = {
+	8'b00000000,
+	8'b00000000,
+	8'b00000000,
+	8'b00000000,
+	8'b00011000,
+	8'b00111100,
+	8'b01111110,
+	8'b01111110
+};
+
+localparam bishopArt [0:7][0:7] = {
+	8'b00000000,
+	8'b00011000,
+	8'b00111100,
+	8'b00111100,
+	8'b00011000,
+	8'b00011000,
+	8'b00111100,
+	8'b11100111
+};
+
+localparam knightArt [0:7][0:7] = { 
+	8'b00011000,
+	8'b01111100,
+	8'b11111110,
+	8'b11101111,
+	8'b00000111,
+	8'b00011111,
+	8'b00111111,
+	8'b01111110
+};
+
+localparam queenArt [0:7][0:7] = { 
+	8'b00000000,
+	8'b01010101,
+	8'b01010101,
+	8'b01010101,
+	8'b01010101,
+	8'b01111111,
+	8'b01111111,
+	8'b01111111
+};
+
+localparam kingArt [0:7][0:7] = { 
+	8'b00011000,
+	8'b01111110,
+	8'b00011000,
+	8'b00011000,
+	8'b00111100,
+	8'b01111110,
+	8'b01111110,
+	8'b00111100
+};
+
+localparam rookArt [0:7][0:7] = { 
+	8'b00000000,
+	8'b01011010,
+	8'b01111110,
+	8'b00111100,
+	8'b00011000,
+	8'b00011000,
+	8'b00111100,
+	8'b01111110
+};
+
+localparam RGB_OUTSIDE = 8'b000_000_00; 
+localparam RGB_DARK_SQ = 8'b101_000_00; 
+localparam RGB_LIGHT_SQ = 8'b111_110_10; 
+localparam RGB_BLACK_PIECE = 8'b010_010_01; 
+localparam RGB_WHITE_PIECE = 8'b110_110_10; // white
+localparam RGB_CURSOR = 8'b000_000_11; // blue
+localparam RGB_SELECTED = 8'b111_000_00; // not sure
+
+// Drawing values for the board
+reg [2:0] counter_row;
+reg [2:0] counter_col;
+reg [6:0] square_x; // coords of the counter within the board square
+reg [6:0] square_y;
+reg [4:0] art_x; // coords on 8x8 artwork grid within the square
+reg [4:0] art_y; 
+wire in_square_border;
+wire in_board;
+wire dark_square; // hi if cursor on dark square, lo if on light square
+
+always @(CounterX) begin
+	if 	  (CounterX <= 170) begin
+		counter_col <= 0;
+		square_x <= CounterX - 120;
+	end
+	else if (CounterX <= 220)  begin
+		counter_col <= 1;
+		square_x <= CounterX - 170;
+	end
+	else if (CounterX <= 270)  begin
+		counter_col <= 2;
+		square_x <= CounterX - 220;
+	end
+	else if (CounterX <= 320)  begin
+		counter_col <= 3;
+		square_x <= CounterX - 270;
+	end
+	else if (CounterX <= 370)  begin
+		counter_col <= 4;
+		square_x <= CounterX - 320;
+	end
+	else if (CounterX <= 420)  begin
+		counter_col <= 5;
+		square_x <= CounterX - 370;
+	end
+	else if (CounterX <= 470)  begin
+		counter_col <= 6;
+		square_x <= CounterX - 420;
+	end
+	else 							   begin
+		counter_col <= 7;
+		square_x <= CounterX - 470;
+	end
+end
+
+always @(CounterY) begin
+	if 	  (CounterY <=  90) begin counter_row <= 0; square_y <= CounterY - 40; end
+	else if (CounterY <= 140) begin counter_row <= 1; square_y <= CounterY - 90; end
+	else if (CounterY <= 190) begin counter_row <= 2; square_y <= CounterY - 140; end
+	else if (CounterY <= 240) begin counter_row <= 3; square_y <= CounterY - 190; end
+	else if (CounterY <= 290) begin counter_row <= 4; square_y <= CounterY - 240; end
+	else if (CounterY <= 340) begin counter_row <= 5; square_y <= CounterY - 290; end
+	else if (CounterY <= 390) begin counter_row <= 6; square_y <= CounterY - 340; end
+	else 							  begin counter_row <= 7; square_y <= CounterY - 390; end
+end
+
+always @(square_x) begin
+	if 	  (square_x <= 10) art_x <= 0;
+	else if (square_x <= 15) art_x <= 1;
+	else if (square_x <= 20) art_x <= 2;
+	else if (square_x <= 25) art_x <= 3;
+	else if (square_x <= 30) art_x <= 4;
+	else if (square_x <= 35) art_x <= 5;
+	else if (square_x <= 40) art_x <= 6;
+	else 							 art_x <= 7;	
+end
+always @(square_y) begin
+	if 	  (square_y <= 10) art_y <= 0;
+	else if (square_y <= 15) art_y <= 1;
+	else if (square_y <= 20) art_y <= 2;
+	else if (square_y <= 25) art_y <= 3;
+	else if (square_y <= 30) art_y <= 4;
+	else if (square_y <= 35) art_y <= 5;
+	else if (square_y <= 40) art_y <= 6;
+	else 							 art_y <= 7;	
+end
+assign in_square_border = (square_x < 5 || square_x > 45)
+							&& (square_y < 5 || square_y > 45);
+assign in_board = (CounterX >= 120 && CounterX <= 520)
+					 &&(CounterY >= 40  && CounterY <= 440);
+assign dark_square = counter_row[0] ^ counter_col[0]; // bit of a hack
+
+// Set the pixel colors based on the Counter positions
+always @(posedge CLK) begin
+	if (!in_board) output_color <= RGB_OUTSIDE;
+	else begin
+		if (in_square_border) begin
+			if (CURSOR_ADDR == { counter_row, counter_col }) 
+				output_color <= RGB_CURSOR;
+			else if (in_square_border && SELECT_ADDR == { counter_row, counter_col } && SELECT_EN)
+				output_color <= RGB_SELECTED;
+			else if (dark_square) 
+				output_color <= RGB_DARK_SQ;
 			else
-			begin
-					R <= ((((CounterY+10)/50) + (CounterX+30)/50) %  2 == 0);
-					G <= ((((CounterY+10)/50) + (CounterX+30)/50) %  2 == 0);
-					B <= ((((CounterY+10)/50) + (CounterX+30)/50) %  2 == 0);
-			end
+				output_color <= RGB_LIGHT_SQ;
 		end
-		else
-		begin
-			R <= 0;
-			G <= 0;
-			B <= 0;
+		else begin
+			// we are inside the drawable area of a square
+			case (board[{counter_row, counter_col}][2:0])
+				PIECE_NONE  : begin
+					if (dark_square) 
+						output_color <= RGB_DARK_SQ;
+					else
+						output_color <= RGB_LIGHT_SQ;
+				end
+				PIECE_PAWN  : begin
+					if (pawnArt[art_y][art_x]) begin
+						if(board[{counter_row, counter_col}][3] == COLOR_BLACK)
+							output_color <= RGB_BLACK_PIECE;
+						else
+							output_color <= RGB_WHITE_PIECE;
+					end
+					else begin
+						if (dark_square) 
+							output_color <= RGB_DARK_SQ;
+						else
+							output_color <= RGB_LIGHT_SQ;
+					end
+				end
+				PIECE_KNIGHT: begin
+					if (knightArt[art_y][art_x]) begin
+						if(board[{counter_row, counter_col}][3] == COLOR_BLACK)
+							output_color <= RGB_BLACK_PIECE;
+						else
+							output_color <= RGB_WHITE_PIECE;
+					end
+					else begin
+						if (dark_square) 
+							output_color <= RGB_DARK_SQ;
+						else
+							output_color <= RGB_LIGHT_SQ;
+					end
+				end
+				PIECE_BISHOP: begin
+					if (bishopArt[art_y][art_x]) begin
+						if(board[{counter_row, counter_col}][3] == COLOR_BLACK)
+							output_color <= RGB_BLACK_PIECE;
+						else
+							output_color <= RGB_WHITE_PIECE;
+					end
+					else begin
+						if (dark_square) 
+							output_color <= RGB_DARK_SQ;
+						else
+							output_color <= RGB_LIGHT_SQ;
+					end
+				end
+				PIECE_ROOK  : begin
+					if (rookArt[art_y][art_x]) begin
+						if(board[{counter_row, counter_col}][3] == COLOR_BLACK)
+							output_color <= RGB_BLACK_PIECE;
+						else
+							output_color <= RGB_WHITE_PIECE;
+					end
+					else begin
+						if (dark_square) 
+							output_color <= RGB_DARK_SQ;
+						else
+							output_color <= RGB_LIGHT_SQ;
+					end
+				end
+				PIECE_QUEEN : begin
+					if (queenArt[art_y][art_x]) begin
+						if(board[{counter_row, counter_col}][3] == COLOR_BLACK)
+							output_color <= RGB_BLACK_PIECE;
+						else
+							output_color <= RGB_WHITE_PIECE;
+					end
+					else begin
+						if (dark_square) 
+							output_color <= RGB_DARK_SQ;
+						else
+							output_color <= RGB_LIGHT_SQ;
+					end
+				end
+				PIECE_KING  : begin
+					if (kingArt[art_y][art_x]) begin
+						if(board[{counter_row, counter_col}][3] == COLOR_BLACK)
+							output_color <= RGB_BLACK_PIECE;
+						else
+							output_color <= RGB_WHITE_PIECE;
+					end
+					else begin
+						if (dark_square) 
+							output_color <= RGB_DARK_SQ;
+						else
+							output_color <= RGB_LIGHT_SQ;
+					end
+				end
+				default: output_color <= RGB_OUTSIDE;
+			endcase
 		end
 	end
-	else
-	begin
-		R <= 0;
-		G <= 0;
-		B <= 0;
-	end
-
-	end
-	if (CURSOR_ADDR > 0) HSYNC <= 0;
-	if (SELECT_ADDR > 0) VSYNC <= 0;
-	else if (SELECT_EN) VSYNC <= 1;
-	else if (CLK) VSYNC <= 0;
 end
 
 endmodule
