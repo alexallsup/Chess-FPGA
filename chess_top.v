@@ -26,7 +26,7 @@ module chess_top( MemOE, MemWR, RamCS, FlashCS, QuadSpiFlashCS, // Disable the t
 		vga_r0, vga_r1, vga_r2,
 		vga_g0, vga_g1, vga_g2,
 		vga_b0, vga_b1,
-		Ld0, Ld1, Ld2, Ld3
+		Ld0, Ld1, Ld2, Ld3, Ld4
     );
 	 
 /*  INPUTS */
@@ -47,7 +47,7 @@ output wire vga_hsync, vga_vsync;
 output wire vga_r0, vga_r1, vga_r2;
 output wire vga_g0, vga_g1, vga_g2;
 output wire vga_b0, vga_b1;
-output wire Ld0, Ld1, Ld2, Ld3;
+output wire Ld0, Ld1, Ld2, Ld3, Ld4;
 
 // connect the vga color buses to the top design's outputs
 wire[2:0] vga_r;
@@ -218,7 +218,7 @@ game_logic logic_module(
 
 	.BtnU(BtnU_pulse), .BtnL(BtnL_pulse), .BtnC(BtnC_pulse),
 	.BtnR(BtnR_pulse), .BtnD(BtnD_pulse),
-	.state(logic_state)
+	.state(logic_state), .move_is_legal(Ld4)
 	);
 
 
