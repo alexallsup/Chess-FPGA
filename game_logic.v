@@ -31,7 +31,8 @@ module game_logic(
     BtnC,
     cursor_addr,
     selected_addr,
-    hilite_selected_square
+    hilite_selected_square,
+	 state
     );
 
 /* Inputs */
@@ -56,7 +57,8 @@ output reg board_change_enable; // signal the board reg in top to write the new 
 // outputs for communicating with the VGA module
 output reg[5:0] cursor_addr;
 output reg[5:0] selected_addr;
-output reg hilite_selected_square;
+output wire hilite_selected_square;
+assign hilite_selected_sqare = (state == PIECE_MOVE);
 
 // wires for the contents of the board input
 wire[3:0] cursor_contents, selected_contents;
@@ -87,7 +89,7 @@ reg move_is_legal; // signal will be generated in combinational logic
 localparam INITIAL = 3'b000,
     PIECE_SEL = 3'b001, PIECE_MOVE= 3'b010,
     WRITE_NEW_PIECE = 3'b011, ERASE_OLD_PIECE = 3'b100, CASTLE = 3'b101;
-reg[2:0] state;
+output reg[2:0] state;
 
 // need sub-state machine for castling since it moves two pieces & requires four ops
 localparam WRITE_KING = 2'b00, ERASE_KING = 2'b01, WRITE_ROOK = 2'b10, ERASE_ROOK = 2'b11;
@@ -98,7 +100,7 @@ always @ (posedge CLK, posedge RESET) begin
     if (RESET) begin
         // initialization code here
         state <= INITIAL;
-        castle_state <= 2'bXX;
+        castle_state <= WRITE_KING;
         player_to_move <= COLOR_WHITE;
         white_can_castle_short <= 1;
         white_can_castle_long  <= 1;
@@ -107,10 +109,9 @@ always @ (posedge CLK, posedge RESET) begin
         
         cursor_addr <= 6'b110_100; // white's king pawn, most common starting move
         selected_addr <= 6'bXXXXXX;
-        hilite_selected_square <= 0;
 
-        board_out_addr <= 6'bXXXXXX;
-        board_out_piece <= 4'bXXXX;
+        board_out_addr <= 6'b000000;
+        board_out_piece <= 4'b0000;
         board_change_enable <= 0;
     end
     else begin
@@ -128,18 +129,13 @@ always @ (posedge CLK, posedge RESET) begin
                 // State Transitions
                 if (BtnC 
                     && cursor_contents[3] == player_to_move
-                    && cursor_contents[2:0] != PIECE_NONE) // TODO verify addressing
+                    && cursor_contents[2:0] != PIECE_NONE) 
+						  begin
                         state <= PIECE_MOVE;
+								
+								selected_addr <= cursor_addr;
+						  end
                 // else we remain in this state
-
-                // RTL operations
-                if (BtnC 
-                    && cursor_contents[3] == player_to_move
-                    && cursor_contents[2:0] != PIECE_NONE) // TODO verify addressing
-                begin
-                    selected_addr <= cursor_addr;
-                    hilite_selected_square <= 1;
-                end
             end
 
             PIECE_MOVE:
@@ -345,7 +341,6 @@ always @ (posedge CLK, posedge RESET) begin
                     player_to_move <= ~player_to_move;
                     state <= PIECE_SEL;
                     board_change_enable <= 0;
-                    hilite_selected_square <= 0;
 
                     if (player_to_move == COLOR_WHITE) begin
                         white_can_castle_long <= 0;
@@ -361,7 +356,7 @@ always @ (posedge CLK, posedge RESET) begin
 			endcase
 	 
 		 /* Cursor Movement Controls */
-		 if (BtnL && cursor_addr[2:0] != 3'b000) cursor_addr <= cursor_addr - 6'b000_001;
+		 if 		(BtnL && cursor_addr[2:0] != 3'b000) cursor_addr <= cursor_addr - 6'b000_001;
 		 else if (BtnR && cursor_addr[2:0] != 3'b111) cursor_addr <= cursor_addr + 6'b000_001;
 		 else if (BtnU && cursor_addr[5:3] != 3'b000) cursor_addr <= cursor_addr - 6'b001_000;
 		 else if (BtnD && cursor_addr[5:3] != 3'b111) cursor_addr <= cursor_addr + 6'b001_000;

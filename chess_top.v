@@ -25,7 +25,8 @@ module chess_top( MemOE, MemWR, RamCS, FlashCS, QuadSpiFlashCS, // Disable the t
 		vga_hsync, vga_vsync, 
 		vga_r0, vga_r1, vga_r2,
 		vga_g0, vga_g1, vga_g2,
-		vga_b0, vga_b1 
+		vga_b0, vga_b1,
+		Ld0, Ld1, Ld2, Ld3
     );
 	 
 /*  INPUTS */
@@ -46,6 +47,7 @@ output wire vga_hsync, vga_vsync;
 output wire vga_r0, vga_r1, vga_r2;
 output wire vga_g0, vga_g1, vga_g2;
 output wire vga_b0, vga_b1;
+output wire Ld0, Ld1, Ld2, Ld3;
 
 // connect the vga color buses to the top design's outputs
 wire[2:0] vga_r;
@@ -113,80 +115,82 @@ generate for (i=0; i<64; i=i+1) begin: BOARD
 end
 endgenerate
 
-initial
-begin: INITIALIZE_BOARD
-	board[6'b111_000] = { COLOR_WHITE, PIECE_ROOK };
-	board[6'b111_001] = { COLOR_WHITE, PIECE_KNIGHT };
-	board[6'b111_010] = { COLOR_WHITE, PIECE_BISHOP };
-	board[6'b111_011] = { COLOR_WHITE, PIECE_QUEEN };
-	board[6'b111_100] = { COLOR_WHITE, PIECE_KING };
-	board[6'b111_101] = { COLOR_WHITE, PIECE_BISHOP };
-	board[6'b111_110] = { COLOR_WHITE, PIECE_KNIGHT };
-	board[6'b111_111] = { COLOR_WHITE, PIECE_ROOK };
+always @(posedge game_logic_clk)
+begin 
+	if (~Reset) begin if (board_change_enable) board[board_change_addr] <= board_change_piece; end
+	else begin
+	board[6'b111_000] <= { COLOR_WHITE, PIECE_ROOK };
+	board[6'b111_001] <= { COLOR_WHITE, PIECE_KNIGHT };
+	board[6'b111_010] <= { COLOR_WHITE, PIECE_BISHOP };
+	board[6'b111_011] <= { COLOR_WHITE, PIECE_QUEEN };
+	board[6'b111_100] <= { COLOR_WHITE, PIECE_KING };
+	board[6'b111_101] <= { COLOR_WHITE, PIECE_BISHOP };
+	board[6'b111_110] <= { COLOR_WHITE, PIECE_KNIGHT };
+	board[6'b111_111] <= { COLOR_WHITE, PIECE_ROOK };
 	
-	board[6'b110_000] = { COLOR_WHITE, PIECE_PAWN };
-	board[6'b110_001] = { COLOR_WHITE, PIECE_PAWN };
-	board[6'b110_010] = { COLOR_WHITE, PIECE_PAWN };
-	board[6'b110_011] = { COLOR_WHITE, PIECE_PAWN };
-	board[6'b110_100] = { COLOR_WHITE, PIECE_PAWN };
-	board[6'b110_101] = { COLOR_WHITE, PIECE_PAWN };
-	board[6'b110_110] = { COLOR_WHITE, PIECE_PAWN };
-	board[6'b110_111] = { COLOR_WHITE, PIECE_PAWN };
+	board[6'b110_000] <= { COLOR_WHITE, PIECE_PAWN };
+	board[6'b110_001] <= { COLOR_WHITE, PIECE_PAWN };
+	board[6'b110_010] <= { COLOR_WHITE, PIECE_PAWN };
+	board[6'b110_011] <= { COLOR_WHITE, PIECE_PAWN };
+	board[6'b110_100] <= { COLOR_WHITE, PIECE_PAWN };
+	board[6'b110_101] <= { COLOR_WHITE, PIECE_PAWN };
+	board[6'b110_110] <= { COLOR_WHITE, PIECE_PAWN };
+	board[6'b110_111] <= { COLOR_WHITE, PIECE_PAWN };
 	
-	board[6'b101_000] = { COLOR_WHITE, PIECE_NONE };
-	board[6'b101_001] = { COLOR_WHITE, PIECE_NONE };
-	board[6'b101_010] = { COLOR_WHITE, PIECE_NONE };
-	board[6'b101_011] = { COLOR_WHITE, PIECE_NONE };
-	board[6'b101_100] = { COLOR_WHITE, PIECE_NONE };
-	board[6'b101_101] = { COLOR_WHITE, PIECE_NONE };
-	board[6'b101_110] = { COLOR_WHITE, PIECE_NONE };
-	board[6'b101_111] = { COLOR_WHITE, PIECE_NONE };
+	board[6'b101_000] <= { COLOR_WHITE, PIECE_NONE };
+	board[6'b101_001] <= { COLOR_WHITE, PIECE_NONE };
+	board[6'b101_010] <= { COLOR_WHITE, PIECE_NONE };
+	board[6'b101_011] <= { COLOR_WHITE, PIECE_NONE };
+	board[6'b101_100] <= { COLOR_WHITE, PIECE_NONE };
+	board[6'b101_101] <= { COLOR_WHITE, PIECE_NONE };
+	board[6'b101_110] <= { COLOR_WHITE, PIECE_NONE };
+	board[6'b101_111] <= { COLOR_WHITE, PIECE_NONE };
 	
-	board[6'b100_000] = { COLOR_WHITE, PIECE_NONE };
-	board[6'b100_001] = { COLOR_WHITE, PIECE_NONE };
-	board[6'b100_010] = { COLOR_WHITE, PIECE_NONE };
-	board[6'b100_011] = { COLOR_WHITE, PIECE_NONE };
-	board[6'b100_100] = { COLOR_WHITE, PIECE_NONE };
-	board[6'b100_101] = { COLOR_WHITE, PIECE_NONE };
-	board[6'b100_110] = { COLOR_WHITE, PIECE_NONE };
-	board[6'b100_111] = { COLOR_WHITE, PIECE_NONE };
+	board[6'b100_000] <= { COLOR_WHITE, PIECE_NONE };
+	board[6'b100_001] <= { COLOR_WHITE, PIECE_NONE };
+	board[6'b100_010] <= { COLOR_WHITE, PIECE_NONE };
+	board[6'b100_011] <= { COLOR_WHITE, PIECE_NONE };
+	board[6'b100_100] <= { COLOR_WHITE, PIECE_NONE };
+	board[6'b100_101] <= { COLOR_WHITE, PIECE_NONE };
+	board[6'b100_110] <= { COLOR_WHITE, PIECE_NONE };
+	board[6'b100_111] <= { COLOR_WHITE, PIECE_NONE };
 	
-	board[6'b011_000] = { COLOR_WHITE, PIECE_NONE };
-	board[6'b011_001] = { COLOR_WHITE, PIECE_NONE };
-	board[6'b011_010] = { COLOR_WHITE, PIECE_NONE };
-	board[6'b011_011] = { COLOR_WHITE, PIECE_NONE };
-	board[6'b011_100] = { COLOR_WHITE, PIECE_NONE };
-	board[6'b011_101] = { COLOR_WHITE, PIECE_NONE };
-	board[6'b011_110] = { COLOR_WHITE, PIECE_NONE };
-	board[6'b011_111] = { COLOR_WHITE, PIECE_NONE };
+	board[6'b011_000] <= { COLOR_WHITE, PIECE_NONE };
+	board[6'b011_001] <= { COLOR_WHITE, PIECE_NONE };
+	board[6'b011_010] <= { COLOR_WHITE, PIECE_NONE };
+	board[6'b011_011] <= { COLOR_WHITE, PIECE_NONE };
+	board[6'b011_100] <= { COLOR_WHITE, PIECE_NONE };
+	board[6'b011_101] <= { COLOR_WHITE, PIECE_NONE };
+	board[6'b011_110] <= { COLOR_WHITE, PIECE_NONE };
+	board[6'b011_111] <= { COLOR_WHITE, PIECE_NONE };
 	
-	board[6'b010_000] = { COLOR_WHITE, PIECE_NONE };
-	board[6'b010_001] = { COLOR_WHITE, PIECE_NONE };
-	board[6'b010_010] = { COLOR_WHITE, PIECE_NONE };
-	board[6'b010_011] = { COLOR_WHITE, PIECE_NONE };
-	board[6'b010_100] = { COLOR_WHITE, PIECE_NONE };
-	board[6'b010_101] = { COLOR_WHITE, PIECE_NONE };
-	board[6'b010_110] = { COLOR_WHITE, PIECE_NONE };
-	board[6'b010_111] = { COLOR_WHITE, PIECE_NONE };
+	board[6'b010_000] <= { COLOR_WHITE, PIECE_NONE };
+	board[6'b010_001] <= { COLOR_WHITE, PIECE_NONE };
+	board[6'b010_010] <= { COLOR_WHITE, PIECE_NONE };
+	board[6'b010_011] <= { COLOR_WHITE, PIECE_NONE };
+	board[6'b010_100] <= { COLOR_WHITE, PIECE_NONE };
+	board[6'b010_101] <= { COLOR_WHITE, PIECE_NONE };
+	board[6'b010_110] <= { COLOR_WHITE, PIECE_NONE };
+	board[6'b010_111] <= { COLOR_WHITE, PIECE_NONE };
 	
-	board[6'b001_000] = { COLOR_BLACK, PIECE_PAWN };
-	board[6'b001_001] = { COLOR_BLACK, PIECE_PAWN };
-	board[6'b001_010] = { COLOR_BLACK, PIECE_PAWN };
-	board[6'b001_011] = { COLOR_BLACK, PIECE_PAWN };
-	board[6'b001_100] = { COLOR_BLACK, PIECE_PAWN };
-	board[6'b001_101] = { COLOR_BLACK, PIECE_PAWN };
-	board[6'b001_110] = { COLOR_BLACK, PIECE_PAWN };
-	board[6'b001_111] = { COLOR_BLACK, PIECE_PAWN };
+	board[6'b001_000] <= { COLOR_BLACK, PIECE_PAWN };
+	board[6'b001_001] <= { COLOR_BLACK, PIECE_PAWN };
+	board[6'b001_010] <= { COLOR_BLACK, PIECE_PAWN };
+	board[6'b001_011] <= { COLOR_BLACK, PIECE_PAWN };
+	board[6'b001_100] <= { COLOR_BLACK, PIECE_PAWN };
+	board[6'b001_101] <= { COLOR_BLACK, PIECE_PAWN };
+	board[6'b001_110] <= { COLOR_BLACK, PIECE_PAWN };
+	board[6'b001_111] <= { COLOR_BLACK, PIECE_PAWN };
 	
-	board[6'b000_000] = { COLOR_BLACK, PIECE_ROOK };
-	board[6'b000_001] = { COLOR_BLACK, PIECE_KNIGHT };
-	board[6'b000_010] = { COLOR_BLACK, PIECE_BISHOP };
-	board[6'b000_011] = { COLOR_BLACK, PIECE_QUEEN };
-	board[6'b000_100] = { COLOR_BLACK, PIECE_KING };
-	board[6'b000_101] = { COLOR_BLACK, PIECE_BISHOP };
-	board[6'b000_110] = { COLOR_BLACK, PIECE_KNIGHT };
-	board[6'b000_111] = { COLOR_BLACK, PIECE_ROOK };
-	
+	board[6'b000_000] <= { COLOR_BLACK, PIECE_ROOK };
+	board[6'b000_001] <= { COLOR_BLACK, PIECE_KNIGHT };
+	board[6'b000_010] <= { COLOR_BLACK, PIECE_BISHOP };
+	board[6'b000_011] <= { COLOR_BLACK, PIECE_QUEEN };
+	board[6'b000_100] <= { COLOR_BLACK, PIECE_KING };
+	board[6'b000_101] <= { COLOR_BLACK, PIECE_BISHOP };
+	board[6'b000_110] <= { COLOR_BLACK, PIECE_KNIGHT };
+	board[6'b000_111] <= { COLOR_BLACK, PIECE_ROOK };
+	end
 end
 
 /* Init game logic module and its output wires */
@@ -196,6 +200,9 @@ wire board_change_enable;
 wire[5:0] cursor_addr;
 wire[5:0] selected_piece_addr;
 wire hilite_selected_square;
+
+wire[3:0] logic_state;
+assign { Ld3, Ld2, Ld1, Ld0 } = logic_state;
 
 game_logic logic_module(
 	.CLK(game_logic_clk), 
@@ -210,14 +217,10 @@ game_logic logic_module(
 	.hilite_selected_square(hilite_selected_square),
 
 	.BtnU(BtnU_pulse), .BtnL(BtnL_pulse), .BtnC(BtnC_pulse),
-	.BtnR(BtnR_pulse), .BtnD(BtnD_pulse)
+	.BtnR(BtnR_pulse), .BtnD(BtnD_pulse),
+	.state(logic_state)
 	);
 
-/* Setup connections from game logic to board register */
-always @(posedge game_logic_clk) 
-begin
-	if (board_change_enable) board[board_change_addr] <= board_change_piece;
-end
 
 /* Init VGA interface */
 display_interface display_interface(

@@ -154,8 +154,8 @@ localparam rookArt [0:7][0:7] = {
 localparam RGB_OUTSIDE = 8'b000_000_00; 
 localparam RGB_DARK_SQ = 8'b101_000_00; 
 localparam RGB_LIGHT_SQ = 8'b111_110_10; 
-localparam RGB_BLACK_PIECE = 8'b010_010_01; 
-localparam RGB_WHITE_PIECE = 8'b110_110_10; // white
+localparam RGB_BLACK_PIECE = 8'b001_001_01; 
+localparam RGB_WHITE_PIECE = 8'b111_111_11; // white
 localparam RGB_CURSOR = 8'b000_000_11; // blue
 localparam RGB_SELECTED = 8'b111_000_00; // not sure
 
@@ -236,8 +236,10 @@ always @(square_y) begin
 	else if (square_y <= 40) art_y <= 6;
 	else 							 art_y <= 7;	
 end
-assign in_square_border = (square_x < 5 || square_x >= 45)
-							&& (square_y < 5 || square_y >= 45);
+assign in_square_border = (   square_x <= 5 
+									|| square_x >= 45
+									||	square_y <= 5 
+									|| square_y >= 45);
 assign in_board = (CounterX >= 120 && CounterX < 520)
 					 &&(CounterY >= 40  && CounterY < 440);
 assign dark_square = counter_row[0] ^ counter_col[0]; // bit of a hack
