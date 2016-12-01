@@ -236,10 +236,10 @@ always @(square_y) begin
 	else if (square_y <= 40) art_y <= 6;
 	else 							 art_y <= 7;	
 end
-assign in_square_border = (square_x < 5 || square_x > 45)
-							&& (square_y < 5 || square_y > 45);
-assign in_board = (CounterX >= 120 && CounterX <= 520)
-					 &&(CounterY >= 40  && CounterY <= 440);
+assign in_square_border = (square_x < 5 || square_x >= 45)
+							&& (square_y < 5 || square_y >= 45);
+assign in_board = (CounterX >= 120 && CounterX < 520)
+					 &&(CounterY >= 40  && CounterY < 440);
 assign dark_square = counter_row[0] ^ counter_col[0]; // bit of a hack
 
 // Set the pixel colors based on the Counter positions
