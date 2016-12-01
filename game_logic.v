@@ -18,12 +18,13 @@
 // Additional Comments: 
 //
 //////////////////////////////////////////////////////////////////////////////////
-module game_logic(
+module game_logic( 
     CLK, RESET,
     board_input,
     board_out_addr,
     board_out_piece,
-    board_change_enable, // allow the board to update its value on next clock
+    //board_change_enable, // allow the board to update its value on next clock
+	 board_change_en_wire,
     BtnL, // All button inputs shall have been debounced & made a single clk pulse outside this module
     BtnU,
     BtnR,
@@ -32,7 +33,7 @@ module game_logic(
     cursor_addr,
     selected_addr,
     hilite_selected_square,
-	 state, move_is_legal
+	 state, move_is_legal, is_in_initial_state
     );
 
 /* Inputs */
@@ -41,7 +42,8 @@ input wire BtnL, BtnU, BtnR, BtnD, BtnC;
 
 input wire [255:0] board_input;
 
-wire[3:0] board[63:0];
+wire [3:0] board[63:0];
+
 genvar i;
 generate for (i=0; i<64; i=i+1) begin: BOARD
 	assign board[i] = board_input[i*4+3 : i*4];
@@ -52,12 +54,17 @@ endgenerate
 // outputs for communicating with the board register in top
 output reg[5:0] board_out_addr;
 output reg[3:0] board_out_piece;
-output reg board_change_enable; // signal the board reg in top to write the new piece to the addr
+reg board_change_enable; // signal the board reg in top to write the new piece to the addr
+output wire board_change_en_wire;
+assign board_change_en_wire = board_change_enable;
 
 // outputs for communicating with the VGA module
 output reg[5:0] cursor_addr;
 output reg[5:0] selected_addr;
 output wire hilite_selected_square;
+
+output wire is_in_initial_state;
+assign is_in_initial_state = (state == INITIAL);
 
 // wires for the contents of the board input
 wire[3:0] cursor_contents, selected_contents;
@@ -113,6 +120,7 @@ always @ (posedge CLK, posedge RESET) begin
         board_out_addr <= 6'b000000;
         board_out_piece <= 4'b0000;
         board_change_enable <= 0;
+	
     end
     else begin
         case (state)

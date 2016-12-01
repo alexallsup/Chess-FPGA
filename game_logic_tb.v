@@ -54,14 +54,14 @@ game_logic game_logic(
 	.board_out_piece(board_change_piece),
 	.board_change_enable(board_change_enable),
 	.cursor_addr(cursor_addr),
-	.selected_piece_addr(selected_piece_addr),
+	//.selected_piece_addr(selected_piece_addr),
 	.hilite_selected_square(hilite_selected_square),
 
 	.BtnU(BtnU), .BtnL(BtnL), .BtnC(BtnC),
 	.BtnR(BtnR), .BtnD(BtnD)
 	);
 
-task BLANK_BOARD;
+/*task BLANK_BOARD;
 	integer j;
 	for (j=0; i < 64; j=j+1) begin
 		board[i] = {COLOR_WHITE, PIECE_NONE};
@@ -159,7 +159,7 @@ task BTNC_PRESS;
 	#20;
 endtask
 
-
+*/
 
 initial begin
 	/* Initialize local signals and initial reset pulse */
@@ -179,7 +179,7 @@ initial begin
 
 	// TEST ONE: verify button movement works as expected
 	// logic cursor should be initialized at the e2 square, 6'b110_100
-	test_count = test_count + 1;
+	/*test_count = test_count + 1;
 	$display("Testing game cursor");
 	BTND_PRESS; // e1
 	BTND_PRESS; // should stay e1 w/o going down
@@ -208,7 +208,7 @@ initial begin
 	BTNR_PRESS; // h8
 	BTNR_PRESS; // should stay h8 w/o going right
 	if(cursor_addr == 6'b000_111) $display("Cursor test pass!");
-	else $display("Cursor test fail!");
+	else $display("Cursor test fail!");*/
 	
 	
 end
