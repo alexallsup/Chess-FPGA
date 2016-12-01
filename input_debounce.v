@@ -19,7 +19,7 @@ output reg Btn_pulse;
 localparam INIT = 3'b000, WQ = 3'b001, SCEN_St = 3'b010, CCR = 3'b011, WFCR = 3'b100;
 reg[2:0] state;
 
-localparam max_i = 6100; // should yield a wait time of approx 0.25s
+localparam max_i = 2000; // should yield a wait time of approx 0.25s
 reg[13:0] I;
 
 always @(posedge CLK, posedge RESET)
@@ -42,11 +42,13 @@ begin
 			WQ:
 			begin
 				if (!Btn) state <= INIT;
-				else if (I == max_i) state <= SCEN_St;
+				else if (I == max_i) begin 
+					state <= SCEN_St;
+					Btn_pulse <= 1;
+				end
 				// else remain
 
 				I <= I + 1;
-				Btn_pulse <= 1;
 			end
 
 			SCEN_St:
