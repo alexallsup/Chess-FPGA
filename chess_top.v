@@ -105,73 +105,7 @@ localparam PIECE_KING	= 3'b110;
 localparam COLOR_WHITE	= 0;
 localparam COLOR_BLACK	= 1;
 
-/* Setup Board */
-reg [3:0] board[63:0] = {
-	4'b1100,
-	4'b1010,
-	4'b1011,
-	4'b1110,
-	4'b1101,
-	4'b1011,
-	4'b0010,
-	4'b0100,
-	4'b1001,
-	4'b1001,
-	4'b1001,
-	4'b1001,
-	4'b1001,
-	4'b1001,
-	4'b1001,
-	4'b1001,
-	4'b0000,
-	4'b0000,
-	4'b0000,
-	4'b0000,
-	4'b0000,
-	4'b0000,
-	4'b0000,
-	4'b0000,
-	4'b0000,
-	4'b0000,
-	4'b0000,
-	4'b0000,
-	4'b0000,
-	4'b0000,
-	4'b0000,
-	4'b0000,
-	4'b0000,
-	4'b0000,
-	4'b0000,
-	4'b0000,
-	4'b0000,
-	4'b0000,
-	4'b0000,
-	4'b0000,
-	4'b0000,
-	4'b0000,
-	4'b0000,
-	4'b0000,
-	4'b0000,
-	4'b0000,
-	4'b0000,
-	4'b0000,
-	4'b1001,
-	4'b1001,
-	4'b1001,
-	4'b1001,
-	4'b1001,
-	4'b1001,
-	4'b1001,
-	4'b1001,
-	4'b1100,
-	4'b1010,
-	4'b1011,
-	4'b1110,
-	4'b1101,
-	4'b1011,
-	4'b1010,
-	4'b1100
-};
+reg [3:0] board[63:0];
 
 wire [255:0] passable_board;
 
@@ -184,7 +118,6 @@ endgenerate
 /* Init game logic module and its output wires */
 wire[5:0] board_change_addr;
 wire[3:0] board_change_piece;
-//wire board_change_enable;
 wire[5:0] cursor_addr;
 wire[5:0] selected_piece_addr;
 wire hilite_selected_square;
@@ -199,7 +132,6 @@ game_logic logic_module(
 
 	.board_out_addr(board_change_addr),
 	.board_out_piece(board_change_piece),
-	//.board_change_enable(board_change_enable),
 	.board_change_en_wire(board_change_en_wire),
 	.cursor_addr(cursor_addr),
 	.selected_addr(selected_piece_addr),

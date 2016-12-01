@@ -303,20 +303,20 @@ always @(*) begin
     if(selected_contents[2:0] == PIECE_PAWN)
         begin
             if (player_to_move == COLOR_WHITE) begin // pawn moves forward (decreasing MSB)
-                if (v_delta == -2 // skip forward by 2?
+                if (v_delta == 2 // skip forward by 2?
                     && h_delta == 0 // not moving diagonally?
                     && selected_addr[5:3] == 3'b110 // moving from home row?
                     && cursor_contents[2:0] == PIECE_NONE // no piece at dest?
-                    && board[selected_addr + 6'b001_000][2:0] == PIECE_NONE // no piece in way?
+                    && board[selected_addr - 6'b001_000][2:0] == PIECE_NONE // no piece in way?
 						  && cursor_addr[5:3] < selected_addr[5:3] )
                     move_is_legal = 1; // moving from home row by 2
-                else if(v_delta == -1 // move forward by 1?
+                else if(v_delta == 1 // move forward by 1?
                     && h_delta == 0
                     && cursor_contents[2:0] == PIECE_NONE
 						  && cursor_addr[5:3] < selected_addr[5:3] )
                     move_is_legal = 1;
-                else if(v_delta == -1
-                    && (h_delta==-1 || h_delta==1) // moving diagonally by 1?
+                else if(v_delta == 1
+                    && (h_delta == 1) // moving diagonally by 1?
                     && cursor_contents[3] == COLOR_BLACK // capturing opponent?
                     && cursor_contents[2:0] != PIECE_NONE // capturing something?
 						  && cursor_addr[5:3] < selected_addr[5:3] )
@@ -327,7 +327,7 @@ always @(*) begin
             else if (player_to_move == COLOR_BLACK) begin
                 if (v_delta == 2 // skip forward by 2?
                     && h_delta == 0 // not moving diagonally?
-                    && selected_addr[5:3] == 3'b110 // moving from home row?
+                    && selected_addr[5:3] == 3'b001 // moving from home row?
                     && cursor_contents[2:0] == PIECE_NONE // no piece at dest?
                     && board[selected_addr + 6'b001_000][2:0] == PIECE_NONE // no piece in way? 
 						  && cursor_addr[5:3] > selected_addr[5:3] )
@@ -338,8 +338,8 @@ always @(*) begin
 						  && cursor_addr[5:3] > selected_addr[5:3] )
                     move_is_legal = 1;
                 else if(v_delta == 1
-                    && (h_delta==-1 || h_delta==1) // moving diagonally by 1?
-                    && cursor_contents[3] == COLOR_BLACK // capturing opponent?
+                    && (h_delta==1) // moving diagonally by 1?
+                    && cursor_contents[3] == COLOR_WHITE // capturing opponent?
                     && cursor_contents[2:0] != PIECE_NONE // capturing something?
 						  && cursor_addr[5:3] > selected_addr[5:3] )
                     move_is_legal = 1;
