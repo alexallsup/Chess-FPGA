@@ -1,6 +1,6 @@
 ///////////////////
 // File Name:   VGA Tutorial
-// Author   :   Da Cheng
+// Author   :   Da Cheng (file used with permission for EE354)
 // Course   :   EE201 
 ///////////////////
 // timing diagram for the horizontal synch signal (HS)

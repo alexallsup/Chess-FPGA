@@ -1,12 +1,4 @@
 # UCF file for NEXYS 3 board
-# File: ee201l_detour_top.ucf (based on test_Nexys2_verilog.ucf)
-# Date: 2/14/08, 9/14/08, 9/13/11
-# Gandhi Puvvada, Byeongju Cha
-
-# -----begin------ Nexys-2/Nexys-3 adjustment ------------------------
-# Instead of modifying the CPU top file with the new names of buttons and memory chip-selects
-# here, we modified the UCF file signal names to suit the earlier top file using Nexys-2 
-# signal names. So we are not using the center button of the 5 buttons on the Nexys-3 board
 
 # ***************
 # Memories disabling   
@@ -18,8 +10,6 @@ Net "RamCS" LOC = L15 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L42P_GCL
 Net "FlashCS" LOC = L17 | IOSTANDARD = LVCMOS33; #Bank = 1, pin name = IO_L46P_FCS_B_M1DQ2, Sch name = P30-CE
 Net "QuadSpiFlashCS" LOC = V3  | IOSTANDARD = LVCMOS33; #Bank = MISC, pin name = IO_L65N_CSO_B_2, Sch name = CS
 # ***************
-
-
 
 #Clock signal
 Net "ClkPort" LOC=V10 | IOSTANDARD=LVCMOS33;
@@ -49,7 +39,7 @@ Net "Ld4" LOC = M11 |  IOSTANDARD = LVCMOS33; #Bank = 2, pin name = IO_L15P, Sch
 
 # ***************   
 
-## We named the center button (at the center of the 5 buttons) as btnC. Digilent schematic label for this is BTNS
+## We named the center button (at the center of the 5 buttons) as BtnC. Digilent schematic label for this is BTNS
 Net "BtnC" LOC = B8 | IOSTANDARD = LVCMOS33; #Bank = 0, pin name = IO_L33P, Sch name = BTNS
 Net "BtnU" LOC = A8 | IOSTANDARD = LVCMOS33; #Bank = 0, pin name = IO_L33N, Sch name = BTNU
 #Net "Btn3" LOC = A8 | IOSTANDARD = LVCMOS33; #Bank = 0, pin name = IO_L33N, Sch name = BTNU

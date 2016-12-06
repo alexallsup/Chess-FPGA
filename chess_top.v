@@ -226,11 +226,7 @@ begin
 	end
 end
 
-
-
-	
-assign { Ld3, Ld2, Ld1, Ld0 } = logic_state;
-
+assign { Ld3, Ld2, Ld1, Ld0 } = logic_state; // useful for debugging, show state machine on LEDs
 
 /* Init VGA interface */
 display_interface display_interface(

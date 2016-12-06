@@ -151,16 +151,16 @@ localparam rookArt [0:7][0:7] = {
 	8'b01111110
 };
 
-localparam RGB_OUTSIDE = 8'b000_000_00; 
-localparam RGB_DARK_SQ = 8'b101_000_00; 
-localparam RGB_LIGHT_SQ = 8'b111_110_10; 
-localparam RGB_BLACK_PIECE = 8'b001_001_01; 
-localparam RGB_WHITE_PIECE = 8'b111_111_11; // white
-localparam RGB_CURSOR = 8'b000_000_11; // blue
-localparam RGB_SELECTED = 8'b111_000_00; // not sure
+localparam RGB_OUTSIDE = 8'b000_000_00;  // outside the drawn board
+localparam RGB_DARK_SQ = 8'b101_000_00;  // color of the dark squares
+localparam RGB_LIGHT_SQ = 8'b111_110_10; // color of the light squares
+localparam RGB_BLACK_PIECE = 8'b001_001_01; // color of the black player's pieces
+localparam RGB_WHITE_PIECE = 8'b111_111_11; // color of the white player's pieces
+localparam RGB_CURSOR = 8'b000_000_11; // color of the squares' outline that shows the cursor
+localparam RGB_SELECTED = 8'b111_000_00; // color of the outline showing which piece is selected 
 
 // Drawing values for the board
-reg [2:0] counter_row;
+reg [2:0] counter_row; // the square the pixels are currently on
 reg [2:0] counter_col;
 reg [6:0] square_x; // coords of the counter within the board square
 reg [6:0] square_y;
@@ -170,79 +170,60 @@ wire in_square_border;
 wire in_board;
 wire dark_square; // hi if cursor on dark square, lo if on light square
 
+// Division is not synthesizable so we have to determine the pointer location the hard way
 always @(CounterX) begin
-	if 	  (CounterX <= 170) begin
-		counter_col <= 0;
-		square_x <= CounterX - 120;
-	end
-	else if (CounterX <= 220)  begin
-		counter_col <= 1;
-		square_x <= CounterX - 170;
-	end
-	else if (CounterX <= 270)  begin
-		counter_col <= 2;
-		square_x <= CounterX - 220;
-	end
-	else if (CounterX <= 320)  begin
-		counter_col <= 3;
-		square_x <= CounterX - 270;
-	end
-	else if (CounterX <= 370)  begin
-		counter_col <= 4;
-		square_x <= CounterX - 320;
-	end
-	else if (CounterX <= 420)  begin
-		counter_col <= 5;
-		square_x <= CounterX - 370;
-	end
-	else if (CounterX <= 470)  begin
-		counter_col <= 6;
-		square_x <= CounterX - 420;
-	end
-	else 							   begin
-		counter_col <= 7;
-		square_x <= CounterX - 470;
-	end
+	if 	    (CounterX <= 170) begin counter_col <= 0; square_x <= CounterX - 120; end
+	else if (CounterX <= 220) begin counter_col <= 1; square_x <= CounterX - 170; end
+	else if (CounterX <= 270) begin counter_col <= 2; square_x <= CounterX - 220; end
+	else if (CounterX <= 320) begin counter_col <= 3; square_x <= CounterX - 270; end
+	else if (CounterX <= 370) begin counter_col <= 4; square_x <= CounterX - 320; end
+	else if (CounterX <= 420) begin counter_col <= 5; square_x <= CounterX - 370; end
+	else if (CounterX <= 470) begin counter_col <= 6; square_x <= CounterX - 420; end
+	else 				      begin counter_col <= 7; square_x <= CounterX - 470; end
 end
 
 always @(CounterY) begin
-	if 	  (CounterY <=  90) begin counter_row <= 0; square_y <= CounterY - 40; end
+	if 	    (CounterY <=  90) begin counter_row <= 0; square_y <= CounterY - 40; end
 	else if (CounterY <= 140) begin counter_row <= 1; square_y <= CounterY - 90; end
 	else if (CounterY <= 190) begin counter_row <= 2; square_y <= CounterY - 140; end
 	else if (CounterY <= 240) begin counter_row <= 3; square_y <= CounterY - 190; end
 	else if (CounterY <= 290) begin counter_row <= 4; square_y <= CounterY - 240; end
 	else if (CounterY <= 340) begin counter_row <= 5; square_y <= CounterY - 290; end
 	else if (CounterY <= 390) begin counter_row <= 6; square_y <= CounterY - 340; end
-	else 							  begin counter_row <= 7; square_y <= CounterY - 390; end
+	else 					  begin counter_row <= 7; square_y <= CounterY - 390; end
 end
 
 always @(square_x) begin
-	if 	  (square_x <= 10) art_x <= 0;
+	if 	    (square_x <= 10) art_x <= 0;
 	else if (square_x <= 15) art_x <= 1;
 	else if (square_x <= 20) art_x <= 2;
 	else if (square_x <= 25) art_x <= 3;
 	else if (square_x <= 30) art_x <= 4;
 	else if (square_x <= 35) art_x <= 5;
 	else if (square_x <= 40) art_x <= 6;
-	else 							 art_x <= 7;	
+	else 				     art_x <= 7;	
 end
 always @(square_y) begin
-	if 	  (square_y <= 10) art_y <= 0;
+	if 	    (square_y <= 10) art_y <= 0;
 	else if (square_y <= 15) art_y <= 1;
 	else if (square_y <= 20) art_y <= 2;
 	else if (square_y <= 25) art_y <= 3;
 	else if (square_y <= 30) art_y <= 4;
 	else if (square_y <= 35) art_y <= 5;
 	else if (square_y <= 40) art_y <= 6;
-	else 							 art_y <= 7;	
+	else 				     art_y <= 7;	
 end
+
+// whether the pointer is in the border outline region of each square
 assign in_square_border = (   square_x <= 5 
-									|| square_x >= 45
-									||	square_y <= 5 
-									|| square_y >= 45);
+						   || square_x >= 45
+						   || square_y <= 5 
+						   || square_y >= 45	);
+// whether the pointer is in the board at all
 assign in_board = (CounterX >= 120 && CounterX < 520)
 					 &&(CounterY >= 40  && CounterY < 440);
-assign dark_square = counter_row[0] ^ counter_col[0]; // bit of a hack
+assign dark_square = counter_row[0] ^ counter_col[0]; // bit of a hack to determine if the pointer is 
+													  // in a dark square or light square
 
 // Set the pixel colors based on the Counter positions
 always @(posedge CLK) begin

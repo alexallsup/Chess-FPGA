@@ -23,7 +23,6 @@ module game_logic(
     board_input,
     board_out_addr,
     board_out_piece,
-    //board_change_enable, // allow the board to update its value on next clock
 	 board_change_en_wire,
     BtnL, // All button inputs shall have been debounced & made a single clk pulse outside this module
     BtnU,
@@ -85,22 +84,16 @@ localparam COLOR_BLACK  = 1;
 
 /* DPU registers */
 reg player_to_move;
-reg white_can_castle_long, white_can_castle_short, // moving a rook or king removes castling rights
-    black_can_castle_long, black_can_castle_short; // so we need flags to track it
 
 output reg move_is_legal; // signal will be generated in combinational logic
 
 /* State Machine Definition */
-// we're gonna use encoded-assignment bc I can
+// use encoded-assignment
 localparam INITIAL = 3'b000,
     PIECE_SEL = 3'b001, PIECE_MOVE= 3'b010,
-    WRITE_NEW_PIECE = 3'b011, ERASE_OLD_PIECE = 3'b100, CASTLE = 3'b101;
+    WRITE_NEW_PIECE = 3'b011, ERASE_OLD_PIECE = 3'b100;
 output reg[2:0] state;
 assign hilite_selected_square = (state == PIECE_MOVE);
-
-// need sub-state machine for castling since it moves two pieces & requires four ops
-localparam WRITE_KING = 2'b00, ERASE_KING = 2'b01, WRITE_ROOK = 2'b10, ERASE_ROOK = 2'b11;
-reg[1:0] castle_state;
 
 /* State Machine NSL and OFL */
 always @ (posedge CLK, posedge RESET) begin
@@ -109,10 +102,6 @@ always @ (posedge CLK, posedge RESET) begin
         state <= INITIAL;
         castle_state <= WRITE_KING;
         player_to_move <= COLOR_WHITE;
-        white_can_castle_short <= 1;
-        white_can_castle_long  <= 1;
-        black_can_castle_short <= 1;
-        black_can_castle_long  <= 1;
         
         cursor_addr <= 6'b110_100; // white's king pawn, most common starting move
         selected_addr <= 6'bXXXXXX;
@@ -123,6 +112,7 @@ always @ (posedge CLK, posedge RESET) begin
 	
     end
     else begin
+        // State machine code from here
         case (state)
             INITIAL :
             begin
@@ -158,12 +148,6 @@ always @ (posedge CLK, posedge RESET) begin
                         board_out_addr <= cursor_addr;
                         board_out_piece <= selected_contents;
                         board_change_enable <= 1;
-
-                        // revoke castle rights if rook move (king move handled in the other if branch)
-                        if     (selected_addr == 6'b111_000) white_can_castle_long <= 0;
-                        else if(selected_addr == 6'b111_111) white_can_castle_short<= 0;
-                        else if(selected_addr == 6'b000_000) black_can_castle_long <= 0;
-                        else if(selected_addr == 6'b000_111) black_can_castle_short<= 0;
                     end
                     else if (cursor_contents[3] == player_to_move
                         && cursor_contents[2:0] != PIECE_NONE)
@@ -202,80 +186,10 @@ always @ (posedge CLK, posedge RESET) begin
                 player_to_move <= ~player_to_move;
             end
 
-            CASTLE:
-            begin
-                // TODO implement castling.
-                // this will be a sub-state machine to handle the four different states
-                case (castle_state)
-                WRITE_KING: 
-                begin
-                    // king being written in last step; erase king next
-                    board_out_addr <= selected_addr;
-                    board_out_piece <= {COLOR_WHITE, PIECE_NONE};
-                    board_change_enable <= 1;
-
-                    castle_state <= ERASE_KING;
-                end
-
-                ERASE_KING:
-                begin
-                    // king being erased by last step; write rook next
-                    board_change_enable <= 1;
-                    castle_state <= WRITE_ROOK;
-
-                    if(cursor_addr == 6'b111_110) begin // white short
-                        board_out_addr <= 6'b111_101;
-                        board_out_piece <= {COLOR_WHITE, PIECE_ROOK};
-                    end
-                    else if(cursor_addr == 6'b111_010) begin // white long
-                        board_out_addr <= 6'b111_011;
-                        board_out_piece <= {COLOR_WHITE, PIECE_ROOK};
-                    end
-                    else if(cursor_addr == 6'b000_110) begin // black short
-                        board_out_addr <= 6'b000_101;
-                        board_out_piece <= {COLOR_BLACK, PIECE_ROOK};
-                    end
-                    else if(cursor_addr == 6'b000_010) begin // black long
-                        board_out_addr <= 6'b000_011;
-                        board_out_piece <= {COLOR_BLACK, PIECE_ROOK};
-                    end
-                end
-
-                WRITE_ROOK:
-                begin
-                    // rook being written by last step; erase rook next
-                    board_out_piece <= {COLOR_WHITE, PIECE_NONE};
-                    board_change_enable <= 1;
-                    castle_state <= ERASE_ROOK;
-
-                    if     (cursor_addr == 6'b111_110) board_out_addr <= 6'b111_111; // white short
-                    else if(cursor_addr == 6'b111_010) board_out_addr <= 6'b111_000; // white long
-                    else if(cursor_addr == 6'b000_110) board_out_addr <= 6'b000_111; // black short
-                    else if(cursor_addr == 6'b000_010) board_out_addr <= 6'b000_011; // black long
-                end
-
-                ERASE_ROOK:
-                begin
-                    // done with castle operation, setup next move
-                    player_to_move <= ~player_to_move;
-                    state <= PIECE_SEL;
-                    board_change_enable <= 0;
-
-                    if (player_to_move == COLOR_WHITE) begin
-                        white_can_castle_long <= 0;
-                        white_can_castle_short <= 0;
-                    end
-                    else begin
-                        black_can_castle_short <= 0;
-                        black_can_castle_long <= 0;
-                    end
-                end
-                endcase
-            end
 			endcase
 	 
 		 /* Cursor Movement Controls */
-		 if 		(BtnL && cursor_addr[2:0] != 3'b000) cursor_addr <= cursor_addr - 6'b000_001;
+		 if      (BtnL && cursor_addr[2:0] != 3'b000) cursor_addr <= cursor_addr - 6'b000_001;
 		 else if (BtnR && cursor_addr[2:0] != 3'b111) cursor_addr <= cursor_addr + 6'b000_001;
 		 else if (BtnU && cursor_addr[5:3] != 3'b000) cursor_addr <= cursor_addr - 6'b001_000;
 		 else if (BtnD && cursor_addr[5:3] != 3'b111) cursor_addr <= cursor_addr + 6'b001_000;
@@ -299,6 +213,7 @@ always @(*) begin
 	else													  v_delta = selected_addr[5:3] - cursor_addr[5:3];
 end
 
+// Logic to generate the move_is_legal signal
 always @(*) begin
     if(selected_contents[2:0] == PIECE_PAWN)
         begin
@@ -322,7 +237,6 @@ always @(*) begin
 						  && cursor_addr[5:3] < selected_addr[5:3] )
                     move_is_legal = 1;
                 else move_is_legal = 0;
-                // TODO implement en passant
             end
             else if (player_to_move == COLOR_BLACK) begin
                 if (v_delta == 2 // skip forward by 2?
